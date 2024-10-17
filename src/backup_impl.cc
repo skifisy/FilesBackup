@@ -3,8 +3,8 @@
 #include <sys/stat.h>  // For stat, chmod
 #include <unistd.h>    // For read, write, link
 #include <utime.h>     // For utime
-#include <cstring>
 
+#include <cstring>
 #include <iostream>
 #include <unordered_map>  // For tracking inodes
 
@@ -99,7 +99,9 @@ void BackUpImpl::CopyFiles(
         std::cerr << "Can not open dir " << src << std::endl;
       }
       while ((dir_entry = readdir(dirp)) != NULL) {
-        if(strcmp(dir_entry->d_name, ".") == 0 || strcmp(dir_entry->d_name, "..") == 0) continue;
+        if (strcmp(dir_entry->d_name, ".") == 0 ||
+            strcmp(dir_entry->d_name, "..") == 0)
+          continue;
         CopyFiles(AppendPath(src, dir_entry->d_name), dest_file, ino_map,
                   dir_list, origin_src, orgin_dest);
       }
@@ -174,9 +176,13 @@ void BackUpImpl::CopyFileMetadata(const std::string& src,
   if (utime(dest.c_str(), &new_times) != 0) {
     std::cerr << "Can not modify time of " << dest << std::endl;
   }
-  // 修改权限
-  if (chmod(dest.c_str(), src_stat.st_mode) != 0) {
-    std::cerr << "Can not modify permission of " << dest << std::endl;
+
+  // 如果是软链接文件，则不修改权限
+  if (src_stat.st_mode & S_IFMT != S_IFLNK) {
+    // 修改权限
+    if (chmod(dest.c_str(), src_stat.st_mode) != 0) {
+      std::cerr << "Can not modify permission of " << dest << std::endl;
+    }
   }
 
   // 修改拥有者/组
@@ -224,7 +230,7 @@ void BackUpImpl::CopySymlinkWithMetadata(const std::string& src,
   struct utimbuf new_times;
   new_times.actime = src_stat.st_atime;
   new_times.modtime = src_stat.st_mtime;
-  if(utime(dest.c_str(), &new_times) != 0) {
+  if (utime(dest.c_str(), &new_times) != 0) {
     std::cerr << "Can not modify time of " << dest << std::endl;
   }
 

@@ -1,3 +1,12 @@
+////
+// @file backup.h
+// @brief
+// 文件备份（主要的api）
+//
+// @author yuhaoze
+// @email 743544510@qq.com
+//
+
 #pragma once
 #include <string>
 
