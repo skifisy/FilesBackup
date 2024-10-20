@@ -1,8 +1,17 @@
 #include <iostream>
 #include <memory>
-#include "backup_impl.h"
 
-int main() {
-  std::unique_ptr<BackUp> backup = std::make_unique<BackUpImpl>();
-  backup->Copy("./test1", "./to");
+#include "backup_impl.h"
+#include "encrypt.h"
+#include "file_sys.h"
+
+int main(int argc, char* argv[]) {
+  if (argc != 2) {
+    std::cerr << "Usage: " << argv[0] << " <filename>" << std::endl;
+    return 1;
+  }
+  std::string p = argv[1];
+  auto files = GetFilesFromDir(p);
+
+  return 0;
 }

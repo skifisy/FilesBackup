@@ -7,46 +7,49 @@
 // @email 743544510@qq.com
 //
 #pragma once
-#include <sys/stat.h>
 
 #include <filesystem>
 #include <string>
+#include <vector>
 namespace fs = std::filesystem;
 
 enum class FileType : uint8_t {
-  REG,
-  DIR,
-  SOCK,
-  CHR,
-  FIFO,
-  BLK,
-  FLNK,
-  UNKNOWN,
-  NOTEXIST
+  REG,      // 普通文件
+  DIR,      // 目录
+  SOCK,     // socket文件
+  CHR,      // 字符文件
+  FIFO,     // 管道文件
+  BLK,      // 块文件
+  FLNK,     // 软链接
+  UNKNOWN,  // 未知文件
+  NOTEXIST  // 文件不存在
 };
 
 class Path {
  public:
   // TODO: 处理/结尾路径，处理相对路径&全路径
-  Path(std::string path) {
-    // /结尾路径：/foo/
-    if (path.back() == '/') path.pop_back();
-    // TODO: 相对路径处理？(软链接指向的路径)
-    path_ = path;
-  }
-  ~Path(){};
-  bool IsExist() { return fs::exists(path_); }
-  bool IsDirectory() { return fs::is_directory(path_); }
-  FileType GetFileType() {
-    struct stat st;
-    if (lstat(path_.string().c_str(), &st) != 0) {
-      return FileType::NOTEXIST;
-    }
-  }
+  Path(std::string path);
+  Path(const Path& path) = default;
 
-  std::string ToString() { return path_.string(); }
+  ~Path(){};
+  bool IsExist() const;
+  bool IsDirectory() const;
+  // 是否为相对路径
+  bool IsRelative() const;
+  bool IsRegular() const;
+  FileType GetFileType() const;
+  std::string ToString() const;
+  std::string FileName() const;
+  Path& ReplaceFileName(const std::string& file_name);
+  // 连接路径
+  Path operator/(const Path& other) const;
 
  private:
+  Path(const fs::path& p);
   fs::path path_;
 };
 
+std::vector<Path> GetFilesFromDir(const Path& path);
+
+// 获取软链接指向的文件路径
+Path GetFileLinkTo(const std::string& path);
