@@ -1,1 +1,7 @@
 /build
+build/**
+.vscode
+testfiles
+testdir
+a.out
+t.cc
