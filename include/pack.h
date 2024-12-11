@@ -7,12 +7,15 @@
 // @email 743544510@qq.com
 //
 #pragma once
+namespace backup {
+
 class FilePack {
  public:
-  virtual void Pack() = 0;
-  virtual void UnPack() = 0;
+  virtual void Pack(std::string src, std::string dest) = 0;
+  virtual void UnPack(std::string src, std::string dest) = 0;
   virtual void PackBatch() = 0;
   virtual void UnPackBatch() = 0;
   FilePack() = default;
   ~FilePack() = default;
 };
+}  // namespace backup

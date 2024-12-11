@@ -6,6 +6,8 @@
 
 #include "backup.h"
 
+namespace backup {
+
 #define BUFFER_SIZE 1024
 
 class BackUpImpl : public BackUp {
@@ -35,16 +37,17 @@ class BackUpImpl : public BackUp {
                  std::vector<std::pair<std::string, std::string>>& dir_list,
                  const std::string& origin_src, const std::string& orgin_dest);
   void CopyFileContent(const std::string& src, const std::string& dest);
-  void CopyFileMetadata(const std::string& src, const std::string& dest);
+  static void CopyFileMetadata(const std::string& src, const std::string& dest);
   /**
    * 将src文件拷贝到dest目录下，包含文件元信息。
    * @param src 源文件
    * @param dest 目标目录
    */
   void CopyFileWithMetadata(const std::string& src, const std::string& dest);
-  void CopySymlinkWithMetadata(const std::string& src, const std::string& dest,
-                               const std::string& origin_src,
-                               const std::string& origin_dest);
+  static void CopySymlinkWithMetadata(const std::string& src,
+                                      const std::string& dest,
+                                      const std::string& origin_src,
+                                      const std::string& origin_dest);
   std::string ToFileName(const std::string& path);
   std::string AppendPath(const std::string& prefix,
                          const std::string& filename);
@@ -52,3 +55,4 @@ class BackUpImpl : public BackUp {
   // void CopyOneFile(const )
   /* data */
 };
+}  // namespace backup

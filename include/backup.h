@@ -9,6 +9,7 @@
 
 #pragma once
 #include <string>
+namespace backup {
 
 class BackUp {
  public:
@@ -26,3 +27,5 @@ class BackUp {
  private:
   /* data */
 };
+
+}  // namespace backup

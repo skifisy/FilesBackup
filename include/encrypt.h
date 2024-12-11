@@ -16,6 +16,8 @@
 #include <iostream>
 using namespace CryptoPP;
 
+namespace backup {
+
 std::string calculate_sha256(const std::string& filename) {
   std::string digest;
   try {
@@ -32,3 +34,4 @@ std::string calculate_sha256(const std::string& filename) {
   }
   return digest;
 }
+}  // namespace backup

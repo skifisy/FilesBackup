@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "backup_impl.h"
-
+using namespace backup;
 class MyClassTestFixture : public ::testing::Test {
 protected:
     void SetUp() override {

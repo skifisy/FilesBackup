@@ -9,6 +9,7 @@
 #include <unordered_map>  // For tracking inodes
 
 #include "backup_impl.h"
+namespace backup {
 
 void BackUpImpl::Copy(const std::string& src, const std::string& dest) {
   std::unordered_map<ino_t, std::string> ino_map;
@@ -26,7 +27,7 @@ void BackUpImpl::Save(const std::string& src, const std::string& dest) {}
 void BackUpImpl::Recover(const std::string& src, const std::string& dest) {}
 
 bool BackUpImpl::IsDirectory(const std::string& path) {
-  struct stat st;
+  struct stat st {};
   if (stat(path.c_str(), &st) != 0) {
     std::cerr << "Failed to get file stat for: " << path << std::endl;
     return false;
@@ -36,7 +37,7 @@ bool BackUpImpl::IsDirectory(const std::string& path) {
 }
 
 bool BackUpImpl::IsExist(const std::string& path) {
-  struct stat st;
+  struct stat st {};
   return stat(path.c_str(), &st) == 0;
 }
 
@@ -65,7 +66,7 @@ void BackUpImpl::CopyFiles(
     std::unordered_map<ino_t, std::string>& ino_map,
     std::vector<std::pair<std::string, std::string>>& dir_list,
     const std::string& origin_src, const std::string& orgin_dest) {
-  struct stat src_stat;
+  struct stat src_stat {};
   std::string dest_file = AppendPath(dest, ToFileName(src));
   DIR* dirp = nullptr;
   struct dirent* dir_entry = nullptr;
@@ -98,7 +99,7 @@ void BackUpImpl::CopyFiles(
       if (dirp == nullptr) {
         std::cerr << "Can not open dir " << src << std::endl;
       }
-      while ((dir_entry = readdir(dirp)) != NULL) {
+      while ((dir_entry = readdir(dirp)) != nullptr) {
         if (strcmp(dir_entry->d_name, ".") == 0 ||
             strcmp(dir_entry->d_name, "..") == 0)
           continue;
@@ -166,10 +167,10 @@ void BackUpImpl::CopyFileContent(const std::string& src,
 void BackUpImpl::CopyFileMetadata(const std::string& src,
                                   const std::string& dest) {
   // 修改时间
-  struct stat src_stat;
+  struct stat src_stat {};
   lstat(src.c_str(), &src_stat);
 
-  struct utimbuf new_times;
+  struct utimbuf new_times {};
   new_times.actime = src_stat.st_atime;   // 设置访问时间
   new_times.modtime = src_stat.st_mtime;  // 设置修改时间
 
@@ -178,7 +179,7 @@ void BackUpImpl::CopyFileMetadata(const std::string& src,
   }
 
   // 如果是软链接文件，则不修改权限
-  if (src_stat.st_mode & S_IFMT != S_IFLNK) {
+  if ((src_stat.st_mode & S_IFMT) != S_IFLNK) {
     // 修改权限
     if (chmod(dest.c_str(), src_stat.st_mode) != 0) {
       std::cerr << "Can not modify permission of " << dest << std::endl;
@@ -253,3 +254,5 @@ std::string BackUpImpl::AppendPath(const std::string& prefix,
     return prefix + '/' + filename;
   }
 }
+
+}  // namespace backup

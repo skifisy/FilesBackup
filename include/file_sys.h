@@ -11,6 +11,9 @@
 #include <filesystem>
 #include <string>
 #include <vector>
+
+namespace backup {
+
 namespace fs = std::filesystem;
 
 enum class FileType : uint8_t {
@@ -28,21 +31,30 @@ enum class FileType : uint8_t {
 class Path {
  public:
   // TODO: 处理/结尾路径，处理相对路径&全路径
+  Path() = default;
+
   Path(std::string path);
   Path(const Path& path) = default;
+  Path(const char* path) : Path(std::string(path)) {}
 
   ~Path(){};
+  // 文件是否存在
   bool IsExist() const;
   bool IsDirectory() const;
   // 是否为相对路径
   bool IsRelative() const;
+  // 是否为普通文件
   bool IsRegular() const;
+  // 获取文件类型
   FileType GetFileType() const;
   std::string ToString() const;
   std::string FileName() const;
   Path& ReplaceFileName(const std::string& file_name);
+  // 相对路径转换为全路径
+  Path ToFullPath() const;
   // 连接路径
   Path operator/(const Path& other) const;
+  std::vector<std::string> SplitPath() const;
 
  private:
   Path(const fs::path& p);
@@ -53,3 +65,7 @@ std::vector<Path> GetFilesFromDir(const Path& path);
 
 // 获取软链接指向的文件路径
 Path GetFileLinkTo(const std::string& path);
+
+// 获取当前工作路径
+Path GetCurPath();
+}  // namespace backup

@@ -1,12 +1,15 @@
 #include <dirent.h>
 #include <fcntl.h>     // For file descriptor
+#include <limits.h>    // 包含 PATH_MAX
 #include <sys/stat.h>  // For stat, chmod
 #include <unistd.h>    // For read, write, link
 #include <utime.h>     // For utime
 
+#include <cassert>
 #include <cstring>
 
 #include "file_sys.h"
+namespace backup {
 
 Path::Path(std::string path) {
   // /结尾路径：/foo/
@@ -25,8 +28,7 @@ bool Path::IsRelative() const {
   return true;
 }
 
-bool Path::IsRegular() const
-{
+bool Path::IsRegular() const {
   FileType type = GetFileType();
   return type == FileType::REG;
 }
@@ -74,7 +76,25 @@ Path& Path::ReplaceFileName(const std::string& file_name) {
   return *this;
 }
 
+Path Path::ToFullPath() const {
+  assert(IsRelative());
+  return GetCurPath() / *this;
+}
+
 Path Path::operator/(const Path& other) const { return path_ / other.path_; }
+
+std::vector<std::string> Path::SplitPath() const {
+  std::string p = ToString();
+  if (p.empty()) return {};
+  std::size_t start = 0, end = std::string::npos;
+  std::vector<std::string> str_list;
+  while ((end = p.find('/', start)) != std::string::npos) {
+    str_list.emplace_back(p.substr(start, end - start));
+    start = end + 1;
+  }
+  str_list.emplace_back(p.substr(start, end));
+  return str_list;
+}
 
 Path::Path(const fs::path& p) { path_ = p; }
 
@@ -102,9 +122,20 @@ Path GetFileLinkTo(const std::string& path) {
   ssize_t len = readlink(path.c_str(), targetPath, sizeof(targetPath) - 1);
   if (len == -1) {
     throw std::runtime_error("Error reading symbolic link");
-    return;
+    return {};
   }
   // 读取成功，添加字符串结束符
   targetPath[len] = '\0';
-  return Path(std::string(targetPath));
+  return {std::string(targetPath)};
 }
+
+Path GetCurPath() {
+  char buffer[PATH_MAX];  // 定义一个缓冲区来存放路径
+
+  // 获取当前工作目录
+  if (getcwd(buffer, sizeof(buffer)) == nullptr) {
+    std::perror("getcwd() error");
+  }
+  return {std::string(buffer)};
+}
+}  // namespace backup
