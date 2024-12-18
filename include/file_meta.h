@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <time.h>
 
+#include <cstring>
 #include <fstream>
 #include <string>
 
@@ -38,17 +39,23 @@ namespace backup {
 #define BACK_MAGIC "BKP"
 
 struct BackupFileHeader {
-  char magic[4];       // 标识符，表示文件类型 "BKU"
-  uint32_t version;    // 备份文件格式的版本号
-  uint64_t timestamp;  // 备份的创建时间戳
-  uint32_t backup_type;  // 备份类型：0表示全量备份，1表示增量备份
-  uint64_t hash;         // 当前备份的唯一标识
-  uint64_t metadata_offset;       // 元数据区域的起始偏移量
-  uint64_t file_data_offset;      // 文件内容区域的起始偏移量
-  uint64_t addition_back_offset;  // 增量备份区域的起始偏移量
-  uint64_t file_count;            // 文件数量（包含目录）
+  char magic[4];        // 标识符，表示文件类型 "BKU"
+  uint32_t version;     // 备份文件格式的版本号
+  time_t timestamp;     // 备份的创建时间戳
+  uint8_t backup_type;  // 备份类型：0表示全量备份，1表示增量备份
+  // uint64_t hash;         // 当前备份的唯一标识
+  uint64_t metadata_offset;         // 元数据区域的起始偏移量
+  uint64_t linkto_metadata_offset;  // 链接源文件元数据的起始偏移
+  uint64_t file_data_offset;        // 文件内容区域的起始偏移量
+  uint64_t addition_back_offset;    // 增量备份区域的起始偏移量
+  uint64_t footer_offset;           // 文件尾的偏移量
+  uint64_t file_count;              // 文件数量（包含目录）
+  uint64_t linkto_count;            // 链接源文件数量
 
-  BackupFileHeader() : magic(BACK_MAGIC) {}
+  BackupFileHeader() {
+    memset(this, 0, sizeof(BackupFileHeader));
+    strcpy(magic, BACK_MAGIC);
+  }
   void Dump(std::ofstream& ofs);
   void Load(std::ifstream& ifs);
 };
@@ -56,22 +63,25 @@ struct BackupFileHeader {
 struct FileMetadata {
   // path格式：不含开始的/，结尾不含/
   // 相对路径，相对于打包文件
-  std::string path;    // 文件或文件夹的相对路径（含文件名）
-  std::string name;    // 文件名
-  bool is_directory;   // 是否为文件夹
-  uint8_t type;        // 文件类型
-  uint64_t size;       // 文件大小（如果是文件夹则为0）
-  mode_t permissions;  // 文件权限
-  time_t mod_time;     // 最后修改时间
-  time_t access_time;  // 最后访问时间
-  bool is_linked_to;   // 是否为软链接文件指向的文件
+  std::string pack_path;  // 文件或文件夹的打包路径（含文件名）
+  std::string name;       // 文件名
+  std::string origin_path;   // 源路径（用于验证）
+  bool is_directory;         // 是否为文件夹
+  uint8_t type;              // 文件类型
+  uint64_t size;             // 文件大小（如果是文件夹则为0）
+  mode_t permissions;        // 文件权限
+  time_t mod_time;           // 最后修改时间
+  time_t access_time;        // 最后访问时间
+  bool is_linked_to;         // 是否为软链接文件指向的文件
   std::string link_to_path;  // 软链接指向的文件路径（原始路径）
-  std::string hash;  // 文件内容的哈希值（用于增量备份时检测修改）
-  uint64_t link_num;  // 文件的链接数
+  std::string link_to_full_path;  // 软链接指向的文件->绝对路径
+  // std::string hash;  // 文件内容的哈希值（用于增量备份时检测修改）
+  uint64_t link_num;  // 文件的链接数（硬链接）
+  uint64_t ino;       // inode节点号
   uint64_t data_offset;  // 文件内容在文件内容区的起始偏移量（如果是文件）
   void Dump(std::ofstream& ofs) const;
   void Load(std::ifstream& ifs);
-  void SetFromPath(const Path& p);
+  void SetFromPath(const Path& src, const std::string& dest = "");
   void SetDataOffset(uint64_t offset) { data_offset = offset; }
 };
 

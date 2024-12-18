@@ -32,3 +32,30 @@ TEST(PathTest, SplitPath) {
   path_list = {};
   EXPECT_EQ(p.SplitPath(), path_list);
 }
+
+TEST(PathTest, GetFileLinkTo) {
+  ::system("rm -f f2");
+  ::system("ln -s ./dir1/f1 f2");
+  Path p = GetFileLinkTo("f2");
+  EXPECT_EQ(p.ToString(), "./dir1/f1");
+  ::system("rm -f f2");
+}
+
+TEST(PathTest, FullPath) {
+  Path p = "./dir/f";
+  Path fullpath = p.ToFullPath();
+  EXPECT_EQ(fullpath.ToString(), (GetCurPath() / p).ToString());
+}
+
+TEST(PathTest, ParentPath) {
+  Path p = "./dir/f/";
+  Path parent = p.ParentPath();
+  EXPECT_EQ(parent.ToString(), "./dir");
+  p = "dir";
+  parent = p.ParentPath();
+  EXPECT_EQ(parent.ToString(), "");
+
+  p = "";
+  parent = p.ParentPath();
+  EXPECT_EQ(parent.ToString(), "");
+}

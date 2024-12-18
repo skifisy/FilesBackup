@@ -15,7 +15,22 @@ Path::Path(std::string path) {
   // /结尾路径：/foo/
   if (path.back() == '/') path.pop_back();
   // TODO: 相对路径处理？(软链接指向的路径)
-  path_ = path;
+  path_ = std::move(path);
+}
+
+Path::Path(Path&& p) noexcept : path_(p.path_) {}
+
+Path &Path::operator=(const Path &path)
+{
+  path_ = path.path_;
+  return *this;
+}
+
+Path &Path::operator=(Path &&path)noexcept
+{
+  if(this == &path) return *this;
+  path_ = std::move(path.path_);
+  return *this;
 }
 
 bool Path::IsExist() const { return fs::exists(path_); }
@@ -28,7 +43,7 @@ bool Path::IsRelative() const {
   return true;
 }
 
-bool Path::IsRegular() const {
+bool Path::IsRegularFile() const {
   FileType type = GetFileType();
   return type == FileType::REG;
 }
@@ -71,6 +86,8 @@ std::string Path::ToString() const { return path_.string(); }
 
 std::string Path::FileName() const { return path_.filename(); }
 
+Path Path::ParentPath() const { return Path(path_.parent_path()); }
+
 Path& Path::ReplaceFileName(const std::string& file_name) {
   path_.replace_filename(file_name);
   return *this;
@@ -97,6 +114,7 @@ std::vector<std::string> Path::SplitPath() const {
 }
 
 Path::Path(const fs::path& p) { path_ = p; }
+Path::Path(fs::path&& p) noexcept : path_(p) {}
 
 std::vector<Path> GetFilesFromDir(const Path& path) {
   std::vector<Path> result;
@@ -138,4 +156,5 @@ Path GetCurPath() {
   }
   return {std::string(buffer)};
 }
+
 }  // namespace backup

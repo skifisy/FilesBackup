@@ -33,9 +33,14 @@ class Path {
   // TODO: 处理/结尾路径，处理相对路径&全路径
   Path() = default;
 
+  // 面对左值发生copy，面对右值移动
   Path(std::string path);
+  // Path(std::string&& p);
   Path(const Path& path) = default;
+  Path(Path&& p) noexcept;
   Path(const char* path) : Path(std::string(path)) {}
+  Path& operator=(const Path& path);
+  Path& operator=(Path&& path) noexcept;
 
   ~Path(){};
   // 文件是否存在
@@ -44,13 +49,14 @@ class Path {
   // 是否为相对路径
   bool IsRelative() const;
   // 是否为普通文件
-  bool IsRegular() const;
+  bool IsRegularFile() const;
   // 获取文件类型
   FileType GetFileType() const;
   std::string ToString() const;
   std::string FileName() const;
+  Path ParentPath() const;
   Path& ReplaceFileName(const std::string& file_name);
-  // 相对路径转换为全路径
+  // 相对路径转换为绝对路径
   Path ToFullPath() const;
   // 连接路径
   Path operator/(const Path& other) const;
@@ -58,6 +64,7 @@ class Path {
 
  private:
   Path(const fs::path& p);
+  Path(fs::path&& p) noexcept;
   fs::path path_;
 };
 
@@ -68,4 +75,5 @@ Path GetFileLinkTo(const std::string& path);
 
 // 获取当前工作路径
 Path GetCurPath();
+
 }  // namespace backup
