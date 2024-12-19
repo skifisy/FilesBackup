@@ -56,7 +56,15 @@ struct BackupFileHeader {
     memset(this, 0, sizeof(BackupFileHeader));
     strcpy(magic, BACK_MAGIC);
   }
-  void Dump(std::ofstream& ofs);
+  static constexpr size_t Size() {
+    // 注意加上string的4字节长度
+    return sizeof(magic) - 1 + sizeof(uint32_t) + sizeof(version) +
+           sizeof(timestamp) + sizeof(backup_type) + sizeof(metadata_offset) +
+           sizeof(linkto_metadata_offset) + sizeof(file_data_offset) +
+           sizeof(addition_back_offset) + sizeof(footer_offset) +
+           sizeof(file_count) + sizeof(linkto_count);
+  }
+  void Dump(std::ofstream& ofs) const;
   void Load(std::ifstream& ifs);
 };
 
@@ -72,13 +80,24 @@ struct FileMetadata {
   mode_t permissions;        // 文件权限
   time_t mod_time;           // 最后修改时间
   time_t access_time;        // 最后访问时间
+  uint32_t uid;              // 用户id
+  uint32_t gid;              // 用户组id
   bool is_linked_to;         // 是否为软链接文件指向的文件
   std::string link_to_path;  // 软链接指向的文件路径（原始路径）
   std::string link_to_full_path;  // 软链接指向的文件->绝对路径
   // std::string hash;  // 文件内容的哈希值（用于增量备份时检测修改）
   uint64_t link_num;  // 文件的链接数（硬链接）
   uint64_t ino;       // inode节点号
-  uint64_t data_offset;  // 文件内容在文件内容区的起始偏移量（如果是文件）
+  uint64_t data_offset = 0;  // 文件内容在文件内容区的起始偏移量（如果是文件）
+  size_t Size() const {
+    return sizeof(uint32_t) * 5  // string
+           + pack_path.size() + name.size() + origin_path.size() +
+           sizeof(uint8_t) * 2  // bool
+           + sizeof(type) + sizeof(size) + sizeof(permissions) +
+           sizeof(mod_time) + sizeof(access_time) + sizeof(uid) + sizeof(gid) +
+           link_to_path.size() + link_to_full_path.size() + sizeof(link_num) +
+           sizeof(ino) + sizeof(data_offset);
+  }
   void Dump(std::ofstream& ofs) const;
   void Load(std::ifstream& ifs);
   void SetFromPath(const Path& src, const std::string& dest = "");

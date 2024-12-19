@@ -23,7 +23,6 @@ class FileNode {
   FileNode(std::ifstream& ifs);
   ~FileNode() = default;
   FileMetadata meta_;
-
   // 文件名 -> FileNode
   std::unordered_map<std::string, std::shared_ptr<FileNode>> children_;
   // std::vector<std::shared_ptr<FileNode>> children_;
@@ -53,14 +52,20 @@ class FileTree {
   void FullDump(std::ofstream& ofs);
 
   /**
-   * @brief 从输入流中FileTree
+   * @brief 从输入流中构建FileTree
    * @param ifs
    */
   void Load(std::ifstream& ifs);
 
-  void Recover(const Path& pack_path, const Path& target_path);
-
-  uint64_t MetaSize() { return sizeof(FileMetadata) * count_; }
+  /**
+   * @brief 将打包文件中 pack_path 所指的 filenode 恢复到 target_path 中
+   * @param pack_path 打包路径（不含开始的/，结尾的/）
+   * @param ifs 打包文件的ifs（用于读取data，恢复regular文件）
+   *        不要求文件流指针的位置
+   * @param target_path 恢复到的目的路径
+   */
+  void Recover(const std::string& pack_path, std::ifstream& ifs,
+               const std::string& target_path);
 
  private:
   void PackFileAdd(const Path& path, std::shared_ptr<FileNode> file_node);
@@ -74,9 +79,10 @@ class FileTree {
   void InitMeta();
   void InitLinkMeta();
   void DumpMetaAndLinkMeta(std::ofstream& ofs);
-  void InitNode(std::shared_ptr<FileNode> root, uint64_t& data_offset);
-
+  void DumpInitNode(std::shared_ptr<FileNode> root, uint64_t& data_offset);
   void DumpData(std::ofstream& ofs);
+  void Recover(std::shared_ptr<FileNode> pack_node, std::ifstream& ifs, const std::string& target_path);
+  void RecoverRegularFile(std::shared_ptr<FileNode> pack_node, std::ifstream& ifs, const std::string& target_path);
 
   /**
    * @brief 磁盘->tree的过程中，可能乱序，所以可能提前创建dir
@@ -92,9 +98,12 @@ class FileTree {
   std::shared_ptr<FileNode> root_;  // dummy node 虚拟根节点
   // 备份被链接的文件， <绝对路径，node>
   std::unordered_map<std::string, std::shared_ptr<FileNode>> file_be_linked_;
-  // TODO: 考虑硬链接
   // 打包->落盘时考虑
-  std::unordered_map<ino_t, std::shared_ptr<FileNode>>
+  // 解包->保存文件时也考虑
+  // 最后的string是实际存储的路径：
+  // - 如果为 打包->落盘，无含义
+  // - 如果为 解包->保存文件，已经dump下来的文件路径，如果为空，说明还没有被dump
+  std::unordered_map<ino_t, std::pair<std::shared_ptr<FileNode>, std::string>>
       ino_map_;  // 用于记录inode号->文件节点
   // 顺序记录要保存的node
   std::vector<std::shared_ptr<FileNode>> nodes_to_save_;

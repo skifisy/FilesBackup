@@ -28,7 +28,7 @@ void LoadVar(bool &t, std::ifstream &ifs) {
   t = b == 1 ? true : false;
 }
 
-void BackupFileHeader::Dump(std::ofstream &ofs) {
+void BackupFileHeader::Dump(std::ofstream &ofs) const {
   DumpString(magic, ofs);
   DumpVar(version, ofs);
   DumpVar(timestamp, ofs);
@@ -70,6 +70,8 @@ void FileMetadata::Dump(std::ofstream &ofs) const {
   DumpVar(permissions, ofs);
   DumpVar(mod_time, ofs);
   DumpVar(access_time, ofs);
+  DumpVar(uid, ofs);
+  DumpVar(gid, ofs);
   DumpVar(is_linked_to, ofs);
   DumpString(link_to_path, ofs);
   DumpString(link_to_full_path, ofs);
@@ -89,6 +91,8 @@ void FileMetadata::Load(std::ifstream &ifs) {
   LoadVar(permissions, ifs);
   LoadVar(mod_time, ifs);
   LoadVar(access_time, ifs);
+  LoadVar(uid, ifs);
+  LoadVar(gid, ifs);
   LoadVar(is_linked_to, ifs);
   LoadString(link_to_path, ifs);
   LoadString(link_to_full_path, ifs);
@@ -121,6 +125,8 @@ void FileMetadata::SetFromPath(const Path &src, const std::string &dest) {
   permissions = st.st_mode;
   mod_time = st.st_mtime;
   access_time = st.st_atime;
+  uid = st.st_uid;
+  gid = st.st_gid;
   is_linked_to = false;
   link_num = st.st_nlink;  // 硬链接数
   ino = st.st_ino;

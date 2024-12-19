@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 #define private public
-#include "file_tree.h"
+#include <cstring>
 
+#include "file_tree.h"
 using namespace backup;
 
 void CheckOneFile(std::shared_ptr<FileNode> node, std::string pack_path,
@@ -15,6 +16,43 @@ void CheckOneFile(std::shared_ptr<FileNode> node, std::string pack_path,
   EXPECT_EQ(node->meta_.type, static_cast<uint8_t>(type));
   EXPECT_EQ(node->meta_.size, size);
   EXPECT_EQ(node->meta_.is_linked_to, is_linked_to);
+}
+
+void CompareNode(std::shared_ptr<FileNode> n1, std::shared_ptr<FileNode> n2) {
+  auto& meta1 = n1->meta_;
+  auto& meta2 = n2->meta_;
+  EXPECT_EQ(meta1.pack_path, meta1.pack_path);
+  EXPECT_EQ(meta1.name, meta2.name);
+  EXPECT_EQ(meta1.origin_path, meta2.origin_path);
+  EXPECT_EQ(meta1.is_directory, meta2.is_directory);
+  EXPECT_EQ(meta1.type, meta2.type);
+  EXPECT_EQ(meta1.size, meta2.size);
+  EXPECT_EQ(meta1.permissions, meta2.permissions);
+  EXPECT_EQ(meta1.mod_time, meta2.mod_time);
+  EXPECT_EQ(meta1.access_time, meta2.access_time);
+  EXPECT_EQ(meta1.uid, meta2.uid);
+  EXPECT_EQ(meta1.gid, meta2.gid);
+  EXPECT_EQ(meta1.is_linked_to, meta2.is_linked_to);
+  EXPECT_EQ(meta1.link_to_path, meta2.link_to_path);
+  EXPECT_EQ(meta1.link_to_full_path, meta2.link_to_full_path);
+  EXPECT_EQ(meta1.link_num, meta2.link_num);
+  EXPECT_EQ(meta1.ino, meta2.ino);
+  EXPECT_EQ(meta1.data_offset, meta2.data_offset);
+}
+
+void CompareHeader(const BackupFileHeader& header1,
+                   const BackupFileHeader& header2) {
+  EXPECT_EQ(strcmp(header1.magic, header2.magic), 0);
+  EXPECT_EQ(header1.version, header2.version);
+  EXPECT_EQ(header1.timestamp, header2.timestamp);
+  EXPECT_EQ(header1.backup_type, header2.backup_type);
+  EXPECT_EQ(header1.metadata_offset, header2.metadata_offset);
+  EXPECT_EQ(header1.linkto_metadata_offset, header2.linkto_metadata_offset);
+  EXPECT_EQ(header1.file_data_offset, header2.file_data_offset);
+  EXPECT_EQ(header1.addition_back_offset, header2.addition_back_offset);
+  EXPECT_EQ(header1.footer_offset, header2.footer_offset);
+  EXPECT_EQ(header1.file_count, header2.file_count);
+  EXPECT_EQ(header1.linkto_count, header2.linkto_count);
 }
 
 TEST(FileTreeTest, LocateAndCreateDir) {
@@ -104,14 +142,58 @@ TEST(FileTreeTest, PackFileAdd) {
 }
 
 TEST(FileTreeTest, FileTreeDump) {
+  ::system("rm -rf for_recover");
   ::system("echo \"hello world\" > f1");
   FileTree tree;
   tree.PackFileAdd("f1", "");
 
-  std::ofstream ofs("output", std::ios::binary);
-  // tree.FullDump(ofs);
-  // tree.DumpMeta();
-  ofs.flush();
+  std::ofstream ofs("packfile", std::ios::binary);
+  tree.FullDump(ofs);
   ofs.close();
+  EXPECT_EQ(tree.header_.metadata_offset, 0x4c);
+
+  FileTree tree2;
+  std::ifstream ifs("packfile", std::ios::binary);
+  tree2.Load(ifs);
+  EXPECT_EQ(tree2.count_, 1);
+  CompareHeader(tree.header_, tree2.header_);
+  CompareNode(tree.root_->children_["f1"], tree2.root_->children_["f1"]);
+  tree2.Recover("", ifs, "for_recover");
+  EXPECT_EQ(::system("cmp f1 for_recover/f1"), 0);
+  ifs.close();
   ::system("rm -rf f1");
+}
+TEST(FileTreeTest, FileTreeDump2) {
+  ::system("rm -rf for_recover dir");
+  ::system(
+      "mkdir dir && echo \"hello world\" > dir/f1 && echo \"hello world file2\" > dir/f2");
+  ::system("mkfifo dir/fifo && ln -s f1 dir/share && ln dir/f1 dir/f3");
+  FileTree tree;
+  tree.PackFileAdd("dir", "");
+  std::ofstream ofs("packfile", std::ios::binary);
+  tree.FullDump(ofs);
+  ofs.close();
+  EXPECT_EQ(tree.header_.metadata_offset, 0x4c);
+  FileTree tree2;
+  std::ifstream ifs("packfile", std::ios::binary);
+  tree2.Load(ifs);
+  // EXPECT_EQ(tree2.count_, 5);
+  EXPECT_EQ(tree2.count_, 6);
+  CompareHeader(tree.header_, tree2.header_);
+  CompareNode(tree.root_->children_["dir"], tree2.root_->children_["dir"]);
+  auto dir1 = tree.root_->children_["dir"],
+       dir2 = tree2.root_->children_["dir"];
+  CompareNode(dir1->children_["f1"], dir2->children_["f1"]);
+  CompareNode(dir1->children_["f2"], dir2->children_["f2"]);
+  CompareNode(dir1->children_["share"], dir2->children_["share"]);
+  CompareNode(dir1->children_["f3"], dir2->children_["f3"]);
+  tree2.Recover("", ifs, "for_recover");
+  ifs.close();
+
+  EXPECT_EQ(::system("cmp dir/f1 for_recover/dir/f1"), 0);
+  EXPECT_EQ(::system("cmp dir/f2 for_recover/dir/f2"), 0);
+  EXPECT_EQ(::system("cmp dir/f3 for_recover/dir/f3"), 0);
+  ::system("echo \"test test...\" > dir/f1");
+  EXPECT_EQ(::system("cmp for_recover/dir/f1 for_recover/dir/f3"), 0);
+  // 检查link，检查file元信息（通过lstat系统调用）
 }

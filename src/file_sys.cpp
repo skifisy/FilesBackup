@@ -7,7 +7,9 @@
 
 #include <cassert>
 #include <cstring>
+#include <iostream>
 
+#include "file_meta.h"
 #include "file_sys.h"
 namespace backup {
 
@@ -20,15 +22,13 @@ Path::Path(std::string path) {
 
 Path::Path(Path&& p) noexcept : path_(p.path_) {}
 
-Path &Path::operator=(const Path &path)
-{
+Path& Path::operator=(const Path& path) {
   path_ = path.path_;
   return *this;
 }
 
-Path &Path::operator=(Path &&path)noexcept
-{
-  if(this == &path) return *this;
+Path& Path::operator=(Path&& path) noexcept {
+  if (this == &path) return *this;
   path_ = std::move(path.path_);
   return *this;
 }
@@ -155,6 +155,71 @@ Path GetCurPath() {
     std::perror("getcwd() error");
   }
   return {std::string(buffer)};
+}
+
+bool SaveFileMetaData(const FileMetadata& meta, const std::string& target) {
+  assert(meta.name == Path(target).FileName());
+  bool ret = true;
+  struct timespec times[2];
+  times[0].tv_sec = meta.access_time;  // atime: 时间戳（秒）
+  times[0].tv_nsec = 0;                // 纳秒
+  times[1].tv_sec = meta.mod_time;     // mtime: 时间戳（秒）
+  times[1].tv_nsec = 0;                // 纳秒
+
+  if (utimensat(AT_FDCWD, target.c_str(), times, AT_SYMLINK_NOFOLLOW) != 0) {
+    std::cerr << "Can not modify time of " << target << std::endl;
+    return false;
+  }
+  // 修改权限
+  // 软链接文件没有权限
+  if (meta.type != static_cast<uint8_t>(FileType::FLNK) &&
+      chmod(target.c_str(), meta.permissions) != 0) {
+    std::cerr << "Can not modify permission of " << target << std::endl;
+    ret = false;
+  }
+
+  // 修改拥有者/组
+  if (lchown(target.c_str(), meta.uid, meta.gid) != 0) {
+    std::cerr << "Can not modify user id or group id of " << target
+              << std::endl;
+    ret = false;
+  }
+
+  return ret;
+}
+
+bool MakeDir(const std::string& dirname, mode_t mode) {
+  bool ret = mkdir(dirname.c_str(), mode) == 0;
+  if (!ret) {
+    std::cerr << "无法创建文件夹'" << dirname << "'" << std::endl;
+  }
+  return ret;
+}
+
+bool Link(const std::string& to, const std::string& from) {
+  bool ret = link(to.c_str(), from.c_str()) == 0;
+  if (!ret) {
+    std::cerr << "无法将文件'" << from << "' 硬链接到文件 '" << to << "'"
+              << std::endl;
+  }
+  return ret;
+}
+
+bool SymLink(const std::string& to, const std::string& from) {
+  bool ret = symlink(to.c_str(), from.c_str()) == 0;
+  if (!ret) {
+    std::cerr << "无法将文件'" << from << "' 软链接到文件 '" << to << "'"
+              << std::endl;
+  }
+  return ret;
+}
+
+bool MakeFifo(const std::string& filename, mode_t mode) {
+  bool ret = mkfifo(filename.c_str(), mode) == 0;
+  if (!ret) {
+    std::cerr << "无法创建管道文件 '" << filename << "'" << std::endl;
+  }
+  return ret;
 }
 
 }  // namespace backup

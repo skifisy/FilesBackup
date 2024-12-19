@@ -13,6 +13,7 @@
 #include <vector>
 
 namespace backup {
+struct FileMetadata;
 
 namespace fs = std::filesystem;
 
@@ -75,5 +76,18 @@ Path GetFileLinkTo(const std::string& path);
 
 // 获取当前工作路径
 Path GetCurPath();
+
+/**
+ * @brief 保存文件的元信息，将元信息 meta 保存到 target中
+ */
+bool SaveFileMetaData(const FileMetadata& meta, const std::string& target);
+
+bool MakeDir(const std::string& dirname, mode_t mode);
+
+bool Link(const std::string& to, const std::string& from);
+
+bool SymLink(const std::string& to, const std::string& from);
+
+bool MakeFifo(const std::string& filename, mode_t mode);
 
 }  // namespace backup
