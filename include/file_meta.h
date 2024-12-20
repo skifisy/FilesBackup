@@ -64,8 +64,8 @@ struct BackupFileHeader {
            sizeof(addition_back_offset) + sizeof(footer_offset) +
            sizeof(file_count) + sizeof(linkto_count);
   }
-  void Dump(std::ofstream& ofs) const;
-  void Load(std::ifstream& ifs);
+  size_t Dump(std::ofstream& ofs) const;
+  size_t Load(std::ifstream& ifs);
 };
 
 struct FileMetadata {
@@ -98,28 +98,29 @@ struct FileMetadata {
            link_to_path.size() + link_to_full_path.size() + sizeof(link_num) +
            sizeof(ino) + sizeof(data_offset);
   }
-  void Dump(std::ofstream& ofs) const;
-  void Load(std::ifstream& ifs);
+  size_t Dump(std::ofstream& ofs) const;
+  size_t Load(std::ifstream& ifs);
   void SetFromPath(const Path& src, const std::string& dest = "");
   void SetDataOffset(uint64_t offset) { data_offset = offset; }
 };
 
-void DumpString(const std::string& str, std::ofstream& ofs);
+size_t DumpString(const std::string& str, std::ofstream& ofs);
 
-void LoadString(std::string& str, std::ifstream& ifs);
+size_t LoadString(std::string& str, std::ifstream& ifs);
 
 template <typename T>
-void DumpVar(const T& t, std::ofstream& ofs) {
+size_t DumpVar(const T& t, std::ofstream& ofs) {
   ofs.write(reinterpret_cast<const char*>(&t), sizeof(t));
+  return sizeof(t);
 }
 
-void DumpVar(bool t, std::ofstream& ofs);
+size_t DumpVar(bool t, std::ofstream& ofs);
 
 template <typename T>
-void LoadVar(T& t, std::ifstream& ifs) {
+size_t LoadVar(T& t, std::ifstream& ifs) {
   ifs.read(reinterpret_cast<char*>(&t), sizeof(t));
 }
 
-void LoadVar(bool& t, std::ifstream& ifs);
+size_t LoadVar(bool& t, std::ifstream& ifs);
 
 }  // namespace backup

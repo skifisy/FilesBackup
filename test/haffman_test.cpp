@@ -17,7 +17,7 @@ TEST(HaffmanTest, CreateHaffmanCode) {
   Haffman haff(mp);
   auto tree = haff.createHaffmanTree();
   auto codes = haff.createHaffmanCode();
-  EXPECT_EQ(codes['a'], std::string("0"));
+  EXPECT_EQ(codes['a'].second, std::bitset<256>(std::string("0")));
 
   mp['b'] = 1;
   mp['c'] = 2;
@@ -25,9 +25,8 @@ TEST(HaffmanTest, CreateHaffmanCode) {
   Haffman haff2(mp);
   tree = haff2.createHaffmanTree();
   codes = haff2.createHaffmanCode();
-
-  EXPECT_EQ(codes['a'], "0");
-  EXPECT_EQ(codes['b'], "111");
-  EXPECT_EQ(codes['c'], "10");
-  EXPECT_EQ(codes['d'], "110");
+  EXPECT_EQ(codes['a'].first, 1);
+  EXPECT_EQ(codes['b'].first, 3);
+  EXPECT_EQ(codes['c'].first, 2);
+  EXPECT_EQ(codes['d'].first, 3);
 }

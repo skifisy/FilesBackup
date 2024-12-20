@@ -7,8 +7,7 @@
 #include "backup.h"
 
 namespace backup {
-
-#define BUFFER_SIZE 1024
+constexpr int BUFFER_SIZE = 1024;
 
 class BackUpImpl : public BackUp {
  public:
