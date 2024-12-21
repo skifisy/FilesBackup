@@ -119,6 +119,7 @@ size_t DumpVar(bool t, std::ofstream& ofs);
 template <typename T>
 size_t LoadVar(T& t, std::ifstream& ifs) {
   ifs.read(reinterpret_cast<char*>(&t), sizeof(t));
+  return sizeof(t);
 }
 
 size_t LoadVar(bool& t, std::ifstream& ifs);
