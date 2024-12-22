@@ -7,6 +7,7 @@
 // @email 743544510@qq.com
 //
 #include <cassert>
+#include <iostream>
 
 #include "file_meta.h"
 #include "haffman.h"
@@ -30,12 +31,16 @@ void Haffman::CountFreq(std::ifstream& ifs) {
       charFreq[buffer[i]]++;
     }
   }
+  for (auto [ch, freq] : charFreq) {
+    nodeQueue.push(new Node(ch, freq));
+  }
 }
 
 size_t Haffman::DumpFreq(std::ofstream& ofs) {
   size_t ret = 0;
   // 1. 写入编码后的bit数
-  ret += DumpVar(len, ofs);
+  file_len_pos = ofs.tellp();
+  ret += DumpVar(file_len, ofs);
   // 2. 写入dump的条数
   uint8_t count = charFreq.size();
   ret += DumpVar(count, ofs);
@@ -52,7 +57,7 @@ size_t Haffman::DumpFreq(std::ofstream& ofs) {
 size_t Haffman::RecoverFreq(std::ifstream& ifs) {
   size_t ret = 0;
   // 1. 读入编码后的bit数
-  ret += LoadVar(len, ifs);
+  ret += LoadVar(file_len, ifs);
   // 2. 读入条数
   uint8_t count;
   ret += LoadVar(count, ifs);
@@ -63,6 +68,7 @@ size_t Haffman::RecoverFreq(std::ifstream& ifs) {
     ret += LoadVar(ch, ifs);
     ret += LoadVar(freq, ifs);
     charFreq[ch] = freq;
+    nodeQueue.push(new Node(ch, freq));
   }
   return ret;
 }
@@ -76,7 +82,10 @@ size_t Haffman::CompressFile(std::ifstream& ifs, std::ofstream& ofs) {
   // 缓冲区（一次读入多个字节）
   char buffer[BUFFER_SIZE];
   while (!ifs.eof()) {
+    assert(ifs.good());
     ifs.read(buffer, BUFFER_SIZE);
+    assert(!ifs.bad());
+    size_t count = ifs.gcount();
     for (size_t i = 0; i < ifs.gcount(); i++) {
       char byte = buffer[i];
       int code_len = codes[byte].first;
@@ -106,7 +115,11 @@ size_t Haffman::CompressFile(std::ifstream& ifs, std::ofstream& ofs) {
       ret += (256 - remain);
     }
   }
-  len = ret;
+  file_len = ret;
+  // 回填file_len
+  ofs.seekp(file_len_pos);
+  DumpVar(file_len, ofs);
+  ofs.seekp(0, std::ios::end);
   return ret;
 }
 
@@ -118,7 +131,7 @@ size_t Haffman::UnCompressFile(std::ifstream& ifs, std::ofstream& ofs) {
   Node* cur_node = nodeQueue.top();
   std::bitset<256> set = 0;
   size_t ret = 0;
-  for (size_t i = 0; i < len / 256; i++) {
+  for (size_t i = 0; i < file_len / 256; i++) {
     LoadBitSet(set, 256, ifs);
     for (size_t pos = 255; pos >= 0; pos--) {
       if (set[pos]) {
@@ -137,7 +150,7 @@ size_t Haffman::UnCompressFile(std::ifstream& ifs, std::ofstream& ofs) {
       }
     }
   }
-  int l = len % 256;
+  int l = file_len % 256;
   if (l != 0) {
     LoadBitSet(set, l, ifs);
     for (size_t pos = 255; pos > 255 - l; pos--) {
@@ -209,10 +222,12 @@ void Haffman::createHaffmanCodeSub(Node* root, int len, std::bitset<256> code) {
     codes[root->ch] = std::make_pair(len, code);
     return;
   }
+  code<<= 1;
   // 左子树
   createHaffmanCodeSub(root->left, len + 1, code);
-  code.set(len);
+  // code.set(len);
   // 右子树
+  code.set(0);
   createHaffmanCodeSub(root->right, len + 1, code);
 }
 

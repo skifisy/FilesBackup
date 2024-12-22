@@ -53,6 +53,8 @@ TEST(HaffmanTest, CompressFileTest) {
   haff.nodeQueue.push(root);
   std::ifstream ifs("haff", std::ios::binary);
   std::ofstream ofs("haff_t", std::ios::binary);
+  ofs.write(reinterpret_cast<const char*>(&haff.file_len), sizeof(haff.file_len));
+  ofs.flush();
   size_t size = haff.CompressFile(ifs, ofs);
   EXPECT_EQ(size, 23);
   // 编码后为：
@@ -63,15 +65,55 @@ TEST(HaffmanTest, CompressFileTest) {
   std::ifstream ifss("haff_t", std::ios::binary);
   std::bitset<256> set, answer(0xcb32ce);
   answer <<= (256 / 8 - 3) * 8;
+  ifss.seekg(sizeof(haff.file_len));
   size = haff.LoadBitSet(set, size, ifss);
   EXPECT_EQ(set, answer);
   EXPECT_EQ(size, 3);
 
-  ifss.seekg(0);
+  ifss.seekg(sizeof(haff.file_len));
   std::ofstream ofss("haff_tt", std::ios::binary);
   size = haff.UnCompressFile(ifss, ofss);
   EXPECT_EQ(size, 9);
   ofss.close();
   EXPECT_EQ(::system("cmp haff haff_tt"), 0);
   ::system("rm -f haff haff_t haff_tt");
+}
+
+TEST(HaffmanTest, DumpAndRecoverTest) {
+  ::system("echo \"hello world\nnvvvvvvdddeeww\" > haff_d");
+  std::ifstream ifs("haff_d", std::ios::binary);
+  std::ofstream ofs("haff_dd", std::ios::binary);
+  Haffman haff;
+  haff.CountFreq(ifs);
+  haff.createHaffmanTree();
+  haff.createHaffmanCode();
+  haff.DumpFreq(ofs);
+  EXPECT_EQ(haff.file_len_pos, 0);
+  ofs.flush();
+  ifs.clear();
+  ifs.seekg(0, std::ios::beg);  // 注意：重新返回到开始的位置！！
+  ifs.close();
+  std::ifstream input("haff_d", std::ios::binary);
+  haff.CompressFile(input, ofs);
+  ofs.close();
+  std::ifstream ifss("haff_dd", std::ios::binary);
+  std::ofstream ofss("haff_ddd", std::ios::binary);
+  Haffman haff2;
+  haff2.RecoverFreq(ifss);
+  haff2.createHaffmanTree();
+  haff2.createHaffmanCode();
+  for(auto& [ch, freq] : haff.charFreq) {
+    EXPECT_EQ(haff2.charFreq[ch], freq);
+  }
+  EXPECT_EQ(haff.file_len, haff2.file_len);
+  for (auto& [ch, pair] : haff.codes) {
+    auto& len = pair.first;
+    auto& code = pair.second;
+    EXPECT_EQ(haff2.codes[ch].first, len);
+    EXPECT_EQ(haff2.codes[ch].second, code);
+  }
+  haff2.UnCompressFile(ifss, ofss);
+  ofss.close();
+  EXPECT_EQ(::system("cmp haff_d haff_ddd"), 0);
+  ::system("rm -f haff_d haff_dd haff_ddd");
 }

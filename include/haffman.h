@@ -99,7 +99,8 @@ class Haffman {
   // 2. 2^8种字符，最长的haffman路径为256-1
   std::unordered_map<char, std::pair<int, std::bitset<256>>> codes;
 
-  size_t len = 0;  // 编码后的bit数
+  size_t file_len = 0;              // 编码后的bit数
+  std::streampos file_len_pos = 0;  // file_len在文件流的位置
 
   // len为实际的bitset长度
   // @return 返回dump下来的字节数
