@@ -79,6 +79,10 @@ Path GetCurPath();
 
 /**
  * @brief 保存文件的元信息，将元信息 meta 保存到 target中
+ * 元信息包括：
+ * 1. 时间
+ * 2. 权限
+ * 3. 拥有者/拥有组
  */
 bool SaveFileMetaData(const FileMetadata& meta, const std::string& target);
 

@@ -163,10 +163,12 @@ TEST(FileTreeTest, FileTreeDump) {
   ifs.close();
   ::system("rm -rf f1");
 }
+
 TEST(FileTreeTest, FileTreeDump2) {
   ::system("rm -rf for_recover dir");
   ::system(
-      "mkdir dir && echo \"hello world\" > dir/f1 && echo \"hello world file2\" > dir/f2");
+      "mkdir dir && echo \"hello world\" > dir/f1 && echo \"hello world "
+      "file2\" > dir/f2");
   ::system("mkfifo dir/fifo && ln -s f1 dir/share && ln dir/f1 dir/f3");
   FileTree tree;
   tree.PackFileAdd("dir", "");
@@ -177,7 +179,6 @@ TEST(FileTreeTest, FileTreeDump2) {
   FileTree tree2;
   std::ifstream ifs("packfile", std::ios::binary);
   tree2.Load(ifs);
-  // EXPECT_EQ(tree2.count_, 5);
   EXPECT_EQ(tree2.count_, 6);
   CompareHeader(tree.header_, tree2.header_);
   CompareNode(tree.root_->children_["dir"], tree2.root_->children_["dir"]);
@@ -189,11 +190,32 @@ TEST(FileTreeTest, FileTreeDump2) {
   CompareNode(dir1->children_["f3"], dir2->children_["f3"]);
   tree2.Recover("", ifs, "for_recover");
   ifs.close();
-
   EXPECT_EQ(::system("cmp dir/f1 for_recover/dir/f1"), 0);
   EXPECT_EQ(::system("cmp dir/f2 for_recover/dir/f2"), 0);
   EXPECT_EQ(::system("cmp dir/f3 for_recover/dir/f3"), 0);
   ::system("echo \"test test...\" > dir/f1");
   EXPECT_EQ(::system("cmp for_recover/dir/f1 for_recover/dir/f3"), 0);
   // 检查link，检查file元信息（通过lstat系统调用）
+  ::system("rm -rf for_recover");
 }
+
+TEST(FileTreeTest, BigFilePackTest) {
+  ::system("rm -rf recover");
+  FileTree tree;
+  tree.PackFileAdd("test.jpg", "");
+
+  std::ofstream ofs("packfile", std::ios::binary);
+  tree.FullDump(ofs);
+  ofs.close();
+
+  // 注意创建另外一个tree，用于打包文件的恢复！
+  std::ifstream ifs("packfile", std::ios::binary);
+  FileTree tree2;
+  tree2.Load(ifs);
+  tree2.Recover("test.jpg", ifs, "recover");
+  ifs.close();
+  EXPECT_EQ(::system("cmp test.jpg recover/test.jpg"), 0);
+  ::system("rm -rf recover");
+}
+
+// TODO: Recover目录下文件重名？

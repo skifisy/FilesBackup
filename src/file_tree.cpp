@@ -54,15 +54,16 @@ void FileTree::Recover(const std::string &pack_path, std::ifstream &ifs,
                        const std::string &target_path) {
   std::shared_ptr<FileNode> node = LocateNode(pack_path);
   assert(node != nullptr);
-  if (node == root_) {
-    // 创建文件夹
-    if (MakeDir(target_path, 0777)) {
+  if (MakeDir(target_path, 0777)) {
+    if (node == root_) {
+      // 创建文件夹
       for (auto [filename, filenode] : node->children_) {
         Recover(filenode, ifs, target_path + '/' + filename);
       }
+    } else {
+      Recover(node, ifs, target_path + '/' + node->meta_.name);
     }
-  } else
-    Recover(node, ifs, target_path);
+  }
 }
 
 void FileTree::PackFileAdd(const Path &src, std::shared_ptr<FileNode> dest) {

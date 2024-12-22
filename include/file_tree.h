@@ -62,7 +62,7 @@ class FileTree {
    * @param pack_path 打包路径（不含开始的/，结尾的/）
    * @param ifs 打包文件的ifs（用于读取data，恢复regular文件）
    *        不要求文件流指针的位置
-   * @param target_path 恢复到的目的路径
+   * @param target_path 恢复到的目的路径，必须是文件夹，不存在则创建
    */
   void Recover(const std::string& pack_path, std::ifstream& ifs,
                const std::string& target_path);

@@ -7,6 +7,7 @@
 // @email 743544510@qq.com
 //
 #pragma once
+#include <string>
 namespace backup {
 
 class FilePack {
