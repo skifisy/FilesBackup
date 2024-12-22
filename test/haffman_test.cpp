@@ -202,100 +202,9 @@ TEST(HaffmanTest, DumpAndRecoverTest1) {
   ::system("rm -f testfile testfile_compress testfile_unpress");
 }
 
-
-/** 
-TEST(HaffmanTest, DumpAndRecoverTest3) {
-  std::ifstream ifs("test.png", std::ios::binary);
-  std::ofstream ofs("test_compress.png", std::ios::binary);
-  // 压缩：
-  Haffman haff;
-  haff.CountFreq(ifs);
-  haff.createHaffmanTree();
-  haff.createHaffmanCode();
-  size_t freq_dump_size = haff.DumpFreq(ofs);
-
-  EXPECT_EQ(haff.file_len_pos, 0);
-  ofs.flush();
-  ifs.clear();
-  ifs.seekg(0, std::ios::beg);  // 注意：重新返回到开始的位置！！
-  haff.CompressFile(ifs, ofs);
-  ofs.close();
-  // 解压：
-  Haffman haff2;
-  std::ifstream ifss("test_compress.png", std::ios::binary);
-  std::ofstream ofss("test_unpress.png", std::ios::binary);
-  size_t recover_size = haff2.RecoverFreq(ifss);
-  EXPECT_EQ(recover_size, freq_dump_size);
-  EXPECT_EQ(ifss.tellg(), freq_dump_size);
-  haff2.createHaffmanTree();
-  haff2.createHaffmanCode();
-  EXPECT_EQ(haff.charFreq.size(), haff2.charFreq.size());
-  for (auto& [ch, freq] : haff.charFreq) {
-    EXPECT_EQ(haff2.charFreq[ch], freq);
-  }
-  EXPECT_EQ(haff.file_len, haff2.file_len);
-  for (auto& [ch, pair] : haff.codes) {
-    auto& len = pair.first;
-    auto& code = pair.second;
-    EXPECT_EQ(haff2.codes[ch].first, len);
-    EXPECT_EQ(haff2.codes[ch].second, code);
-  }
-
-  haff2.UnCompressFile(ifss, ofss);
-  ifss.clear();
-  ofss.close();
-  EXPECT_EQ(::system("cmp test.png test_unpress.png"), 0);
-}
-*/
-
-
-TEST(HaffmanTest, DumpAndRecoverTest3) {
-  std::ifstream ifs("test.pdf", std::ios::binary);
-  std::ofstream ofs("test_compress.pdf", std::ios::binary);
-  // 压缩：
-  Haffman haff;
-  haff.CountFreq(ifs);
-  haff.createHaffmanTree();
-  haff.createHaffmanCode();
-  size_t freq_dump_size = haff.DumpFreq(ofs);
-
-  EXPECT_EQ(haff.file_len_pos, 0);
-  ofs.flush();
-  ifs.clear();
-  ifs.seekg(0, std::ios::beg);  // 注意：重新返回到开始的位置！！
-  haff.CompressFile(ifs, ofs);
-  ofs.close();
-  // 解压：
-  Haffman haff2;
-  std::ifstream ifss("test_compress.pdf", std::ios::binary);
-  std::ofstream ofss("test_unpress.pdf", std::ios::binary);
-  size_t recover_size = haff2.RecoverFreq(ifss);
-  EXPECT_EQ(recover_size, freq_dump_size);
-  EXPECT_EQ(ifss.tellg(), freq_dump_size);
-  haff2.createHaffmanTree();
-  haff2.createHaffmanCode();
-  EXPECT_EQ(haff.charFreq.size(), haff2.charFreq.size());
-  for (auto& [ch, freq] : haff.charFreq) {
-    EXPECT_EQ(haff2.charFreq[ch], freq);
-  }
-  EXPECT_EQ(haff.file_len, haff2.file_len);
-  for (auto& [ch, pair] : haff.codes) {
-    auto& len = pair.first;
-    auto& code = pair.second;
-    EXPECT_EQ(haff2.codes[ch].first, len);
-    EXPECT_EQ(haff2.codes[ch].second, code);
-  }
-
-  haff2.UnCompressFile(ifss, ofss);
-  ifss.clear();
-  ofss.close();
-  EXPECT_EQ(::system("cmp test.pdf test_unpress.pdf"), 0);
-}
-
-/**
 TEST(HaffmanTest, DumpAndRecoverTest2) {
   std::ifstream ifs("test.jpg", std::ios::binary);
-  std::ofstream ofs("test_compress", std::ios::binary);
+  std::ofstream ofs("test_compress.jpg", std::ios::binary);
   // 压缩：
   Haffman haff;
   haff.CountFreq(ifs);
@@ -311,7 +220,7 @@ TEST(HaffmanTest, DumpAndRecoverTest2) {
   ofs.close();
   // 解压：
   Haffman haff2;
-  std::ifstream ifss("test_compress", std::ios::binary);
+  std::ifstream ifss("test_compress.jpg", std::ios::binary);
   std::ofstream ofss("test_unpress.jpg", std::ios::binary);
   size_t recover_size = haff2.RecoverFreq(ifss);
   EXPECT_EQ(recover_size, freq_dump_size);
@@ -329,18 +238,9 @@ TEST(HaffmanTest, DumpAndRecoverTest2) {
     EXPECT_EQ(haff2.codes[ch].first, len);
     EXPECT_EQ(haff2.codes[ch].second, code);
   }
-  std::cout << "freq_dump_size: " << freq_dump_size << std::endl;
-  std::cout << haff.codes[0].first << std::endl;
-  std::cout << haff.codes[0].second << std::endl;
-  std::cout << haff.codes[0x52].first << std::endl;
-  std::cout << haff.codes[0x52].second << std::endl;
-  std::cout << haff.codes[0x25].first << std::endl;
-  std::cout << haff.codes[0x25].second << std::endl;
-
   haff2.UnCompressFile(ifss, ofss);
   ifss.clear();
   ofss.close();
   EXPECT_EQ(::system("cmp test.jpg test_unpress.jpg"), 0);
+  ::system("rm -f test_compress.jpg test_unpress.jpg");
 }
-
-*/

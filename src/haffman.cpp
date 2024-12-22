@@ -81,25 +81,15 @@ size_t Haffman::CompressFile(std::ifstream& ifs, std::ofstream& ofs) {
   std::bitset<256> cur = 0;  // 当前需要写入的bitset
   // 缓冲区（一次读入多个字节）
   char buffer[BUFFER_SIZE];
-  int debug = 0;
   while (!ifs.eof()) {
     assert(ifs.good());
     ifs.read(buffer, BUFFER_SIZE);
-    debug++;
     assert(!ifs.bad());
     size_t count = ifs.gcount();
     for (size_t i = 0; i < ifs.gcount(); i++) {
       char byte = buffer[i];
       int code_len = codes[byte].first;
       std::bitset<256> code = codes[byte].second;
-      if (i == 0 && debug == 2) {
-        std::cout << (int)byte << std::endl;
-        std::cout << code.to_string() << std::endl;
-        std::cout << "remain: " << remain << std::endl;
-        std::cout << cur << std::endl;
-        std::cout << ofs.tellp() << std::endl;
-      }
-
       if (code_len <= remain) {
         // example: A: 110 remain: 256
         // cur = 110....
@@ -124,13 +114,13 @@ size_t Haffman::CompressFile(std::ifstream& ifs, std::ofstream& ofs) {
         cur |= (code << remain);
       }
     }
-    // 最后一个为非对齐字节
-    if (remain != 256) {
-      // 说明还剩了几位
-      // return remain;  // 保存剩余的位数
-      DumpBitSet(cur, 256 - remain, ofs);
-      ret += (256 - remain);
-    }
+  }
+  // 最后一个为非对齐字节
+  if (remain != 256) {
+    // 说明还剩了几位
+    // return remain;  // 保存剩余的位数
+    DumpBitSet(cur, 256 - remain, ofs);
+    ret += (256 - remain);
   }
   file_len = ret;
   // 回填file_len
@@ -152,7 +142,6 @@ size_t Haffman::UnCompressFile(std::ifstream& ifs, std::ofstream& ofs) {
     LoadBitSet(set, 256, ifs);
 
     for (int pos = 255; pos >= 0; pos--) {
-
       if (set[pos]) {
         cur_node = cur_node->right;
       } else {
