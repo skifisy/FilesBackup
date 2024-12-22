@@ -6,3 +6,4 @@ testfiles
 testdir
 a.out
 t.cc
+!build/test.jpg

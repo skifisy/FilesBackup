@@ -42,7 +42,7 @@ size_t Haffman::DumpFreq(std::ofstream& ofs) {
   file_len_pos = ofs.tellp();
   ret += DumpVar(file_len, ofs);
   // 2. 写入dump的条数
-  uint8_t count = charFreq.size();
+  uint16_t count = charFreq.size();  // 最多256条，超过了uint8_t的表示范围
   ret += DumpVar(count, ofs);
   // 3. 逐条写入
   for (auto& pair : charFreq) {
@@ -59,10 +59,10 @@ size_t Haffman::RecoverFreq(std::ifstream& ifs) {
   // 1. 读入编码后的bit数
   ret += LoadVar(file_len, ifs);
   // 2. 读入条数
-  uint8_t count;
+  uint16_t count;
   ret += LoadVar(count, ifs);
   // 3. 逐条读入
-  for (uint8_t i = 0; i < count; i++) {
+  for (uint16_t i = 0; i < count; i++) {
     uint8_t ch;
     uint64_t freq;
     ret += LoadVar(ch, ifs);
@@ -81,33 +81,50 @@ size_t Haffman::CompressFile(std::ifstream& ifs, std::ofstream& ofs) {
   std::bitset<256> cur = 0;  // 当前需要写入的bitset
   // 缓冲区（一次读入多个字节）
   char buffer[BUFFER_SIZE];
+  int debug = 0;
   while (!ifs.eof()) {
     assert(ifs.good());
     ifs.read(buffer, BUFFER_SIZE);
+    debug++;
     assert(!ifs.bad());
     size_t count = ifs.gcount();
     for (size_t i = 0; i < ifs.gcount(); i++) {
       char byte = buffer[i];
       int code_len = codes[byte].first;
       std::bitset<256> code = codes[byte].second;
+      if (i == 0 && debug == 2) {
+        std::cout << (int)byte << std::endl;
+        std::cout << code.to_string() << std::endl;
+        std::cout << "remain: " << remain << std::endl;
+        std::cout << cur << std::endl;
+        std::cout << ofs.tellp() << std::endl;
+      }
+
       if (code_len <= remain) {
-        // example: A: 110 pos: 256
+        // example: A: 110 remain: 256
         // cur = 110....
-        cur |= code << (remain - code_len);
+        cur |= (code << (remain - code_len));
         remain -= code_len;
+        if (remain == 0) {  // 不能直接并到else里面去！
+          DumpBitSet(cur, 256, ofs);
+          ret += 256;
+          cur = 0;
+          remain = 256;
+        }
       } else {
         // example: A: 11110 remain: 2
         // cur = xx...11
-        cur |= code >> (code_len - remain);
+        cur |= (code >> (code_len - remain));
         DumpBitSet(cur, 256, ofs);
         ret += 256;
         cur = 0;
         code = codes[byte].second;
-        cur |= code << (256 - remain);  // 256 减去之前用掉的位数
-        // cur = 110...
+        // cur = 110...  remain: 256 - (code_len - remain)
         remain = 256 - (code_len - remain);
+        cur |= (code << remain);
       }
     }
+    // 最后一个为非对齐字节
     if (remain != 256) {
       // 说明还剩了几位
       // return remain;  // 保存剩余的位数
@@ -133,7 +150,9 @@ size_t Haffman::UnCompressFile(std::ifstream& ifs, std::ofstream& ofs) {
   size_t ret = 0;
   for (size_t i = 0; i < file_len / 256; i++) {
     LoadBitSet(set, 256, ifs);
-    for (size_t pos = 255; pos >= 0; pos--) {
+
+    for (int pos = 255; pos >= 0; pos--) {
+
       if (set[pos]) {
         cur_node = cur_node->right;
       } else {
@@ -153,7 +172,7 @@ size_t Haffman::UnCompressFile(std::ifstream& ifs, std::ofstream& ofs) {
   int l = file_len % 256;
   if (l != 0) {
     LoadBitSet(set, l, ifs);
-    for (size_t pos = 255; pos > 255 - l; pos--) {
+    for (int pos = 255; pos > 255 - l; pos--) {
       if (set[pos]) {
         cur_node = cur_node->right;
       } else {
@@ -180,6 +199,12 @@ size_t Haffman::UnCompressFile(std::ifstream& ifs, std::ofstream& ofs) {
 
 // 构建哈夫曼树
 Node* Haffman::createHaffmanTree() {
+  assert(!nodeQueue.empty());
+  if (nodeQueue.size() == 1) {
+    Node* node = nodeQueue.top();
+    nodeQueue.pop();
+    nodeQueue.push(new Node('\0', 0, node, nullptr));
+  }
   while (nodeQueue.size() > 1) {
     Node* left = nodeQueue.top();
     nodeQueue.pop();
@@ -222,7 +247,7 @@ void Haffman::createHaffmanCodeSub(Node* root, int len, std::bitset<256> code) {
     codes[root->ch] = std::make_pair(len, code);
     return;
   }
-  code<<= 1;
+  code <<= 1;
   // 左子树
   createHaffmanCodeSub(root->left, len + 1, code);
   // code.set(len);
@@ -234,19 +259,18 @@ void Haffman::createHaffmanCodeSub(Node* root, int len, std::bitset<256> code) {
 // 注意：必须从高位字节->低位字节编码
 size_t Haffman::DumpBitSet(std::bitset<256> set, int len, std::ofstream& ofs) {
   size_t ret = len / 8 + (len % 8 ? 1 : 0);
-  std::bitset<256> mask(uint8_t(-1));
   // 将len按照字节对齐写入
   for (size_t i = 0; i < len / 8; i++) {
     uint8_t byte = 0;
     // 取出最高的8位
     byte = static_cast<uint8_t>((set >> (256 - 8)).to_ulong());
-    ofs << byte;
+    DumpVar(byte, ofs);
     set <<= 8;
   }
   if (len % 8 != 0) {
     uint8_t byte = 0;
     byte = static_cast<uint8_t>((set >> (256 - 8)).to_ulong());
-    ofs << byte;
+    DumpVar(byte, ofs);
   }
   return ret;
 }
@@ -254,23 +278,26 @@ size_t Haffman::DumpBitSet(std::bitset<256> set, int len, std::ofstream& ofs) {
 size_t Haffman::LoadBitSet(std::bitset<256>& set, int len, std::ifstream& ifs) {
   set = 0;
   size_t ret = len / 8 + (len % 8 ? 1 : 0);
-  for (size_t i = 0; i < len / 8; i++) {
+  // size_t ret = 0;
+  for (int i = 0; i < len / 8; i++) {
     uint8_t byte = 0;
-    ifs >> byte;
+    // LoadVar(byte, ifs);
+    ifs.read(reinterpret_cast<char*>(&byte), sizeof(byte));
     std::bitset<256> bset(byte);
-    set |= bset;
     set <<= 8;
+    set |= bset;
   }
   // 最后剩下一个字节
   if (len % 8 != 0) {
     uint8_t byte = 0;
-    ifs >> byte;
+    LoadVar(byte, ifs);
     std::bitset<256> bset(byte);
+    set <<= 8;
     set |= bset;
   }
   // 补齐到高位
   // b1 b2 b3 b4 b5
-  if (ret < 256 / 8) {
+  if (ret < (256 / 8)) {
     set <<= (256 / 8 - ret) * 8;
   }
   return ret;
