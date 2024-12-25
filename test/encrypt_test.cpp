@@ -43,3 +43,15 @@ TEST(EncryptTest, EncryptFile) {
   EXPECT_EQ(::system("cmp test.txt decrypted.txt"), 0);
   ::system("rm -f test.txt encrypted.dat decrypted.txt");
 }
+
+TEST(EncryptTest, SHA256Test) {
+  std::ofstream ofs("test.txt");
+  std::string output("hello world");
+  ofs.write(output.c_str(), output.size());
+  ofs.flush();
+  unsigned char hash[SHA256_SIZE];
+  std::ifstream ifs("test.txt");
+  EXPECT_TRUE(compute_file_sha256(ifs, hash));
+  EXPECT_EQ(HashToHexString(hash, SHA256_SIZE),"b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9");
+  ::system("rm -f test.txt");
+}

@@ -12,6 +12,7 @@
 
 namespace backup {
 #define RETRY_COUNT 10000
+#define SHA256_SIZE 32
 class Encrypt {
  public:
   // 加密文件
@@ -28,4 +29,11 @@ class Encrypt {
   unsigned char iv[16];
   unsigned char key[32];  // 256位密钥
 };
+
+/**
+ * @param hash 长度为32字节的哈希值
+ */
+bool compute_file_sha256(std::ifstream& file, unsigned char* hash);
+
+std::string HashToHexString(const unsigned char* hash, size_t hash_len);
 }  // namespace backup

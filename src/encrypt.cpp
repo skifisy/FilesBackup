@@ -13,6 +13,7 @@
 
 #include <cstring>
 #include <fstream>
+#include <iomanip>  // for std::hex and std::setw
 #include <iostream>
 #include <string>
 
@@ -161,6 +162,60 @@ bool Encrypt::AES_decrypt_file(const std::string &password) {
 
   EVP_CIPHER_CTX_free(ctx);
   return true;
+}
+
+bool compute_file_sha256(std::ifstream &file, unsigned char* hash) {
+  constexpr size_t buffer_size = 4096;  // Buffer size for file reading
+  unsigned char buffer[buffer_size];
+  unsigned int hash_len = 0;
+  const EVP_MD *hash_function = EVP_sha256();
+
+  // Initialize OpenSSL context
+  EVP_MD_CTX *md_ctx = EVP_MD_CTX_new();
+  if (!md_ctx) {
+    std::cerr << "Failed to create EVP_MD_CTX" << std::endl;
+    return false;
+  }
+
+  if (EVP_DigestInit_ex(md_ctx, hash_function, nullptr) != 1) {
+    std::cerr << "EVP_DigestInit_ex failed" << std::endl;
+    EVP_MD_CTX_free(md_ctx);
+    return false;
+  }
+
+  // Read file and update hash
+  while (file.good()) {
+    file.read(reinterpret_cast<char *>(buffer), buffer_size);
+    size_t bytes_read = file.gcount();
+    if (bytes_read > 0) {
+      if (EVP_DigestUpdate(md_ctx, buffer, bytes_read) != 1) {
+        std::cerr << "EVP_DigestUpdate failed" << std::endl;
+        EVP_MD_CTX_free(md_ctx);
+        return false;
+      }
+    }
+  }
+
+  // Finalize the hash
+  if (EVP_DigestFinal_ex(md_ctx, hash, &hash_len) != 1) {
+    std::cerr << "EVP_DigestFinal_ex failed" << std::endl;
+    EVP_MD_CTX_free(md_ctx);
+    return false;
+  }
+
+  EVP_MD_CTX_free(md_ctx);
+
+  return true;
+}
+
+std::string HashToHexString(const unsigned char *hash, size_t hash_len) {
+  // Convert hash to hexadecimal string
+  std::ostringstream oss;
+  for (unsigned int i = 0; i < hash_len; ++i) {
+    oss << std::hex << std::setw(2) << std::setfill('0')
+        << static_cast<int>(hash[i]);
+  }
+  return oss.str();
 }
 
 }  // namespace backup
