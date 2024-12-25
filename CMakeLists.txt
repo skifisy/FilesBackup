@@ -20,7 +20,9 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # 查找 Crypto++ 库
 # find_package(CryptoPP REQUIRED)
-find_library(CRYPTOPP_LIBRARY NAMES cryptopp)
+# find_library(CRYPTOPP_LIBRARY NAMES cryptopp)
+# 查找OpenSSL的加密库
+find_library(CRYPTO_LIBRARY NAMES crypto)
 
 # 查找 src 目录下的所有 cpp 文件和 c 文件并存入变量 SRC_FILES
 file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/src/*.c)
@@ -43,7 +45,7 @@ add_executable(unit_tests ${TEST_FILES})
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/main.cpp)
 add_library(backuplib ${SRC_FILES})
 # target_link_libraries(backuplib CryptoPP::CryptoPP) 
-target_link_libraries(backuplib ${CRYPTOPP_LIBRARY}) 
+target_link_libraries(backuplib ${CRYPTO_LIBRARY}) 
 
 # 生成可执行文件
 add_executable(backup ${PROJECT_SOURCE_DIR}/src/main.cpp)
