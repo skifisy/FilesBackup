@@ -34,11 +34,11 @@ TEST(PathTest, SplitPath) {
 }
 
 TEST(PathTest, GetFileLinkTo) {
-  ::system("rm -f f2");
-  ::system("ln -s ./dir1/f1 f2");
+  EXPECT_EQ(::system("rm -f f2"), 0);
+  EXPECT_EQ(::system("ln -s ./dir1/f1 f2"), 0);
   Path p = GetFileLinkTo("f2");
   EXPECT_EQ(p.ToString(), "./dir1/f1");
-  ::system("rm -f f2");
+  EXPECT_EQ(::system("rm -f f2"), 0);
 }
 
 TEST(PathTest, FullPath) {

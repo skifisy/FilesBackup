@@ -187,7 +187,9 @@ void BackUpImpl::CopyFileMetadata(const std::string& src,
   }
 
   // 修改拥有者/组
-  chown(dest.c_str(), src_stat.st_uid, src_stat.st_gid);
+  if (chown(dest.c_str(), src_stat.st_uid, src_stat.st_gid) != 0) {
+    std::cerr << "Can not modify owner of " << dest << std::endl;
+  }
 }
 
 void BackUpImpl::CopyFileWithMetadata(const std::string& src,
@@ -234,8 +236,9 @@ void BackUpImpl::CopySymlinkWithMetadata(const std::string& src,
   if (utime(dest.c_str(), &new_times) != 0) {
     std::cerr << "Can not modify time of " << dest << std::endl;
   }
-
-  chown(dest.c_str(), src_stat.st_uid, src_stat.st_gid);
+  if (chown(dest.c_str(), src_stat.st_uid, src_stat.st_gid) != 0) {
+    std::cerr << "Can not modify owner of " << dest << std::endl;
+  }
 }
 
 std::string BackUpImpl::ToFileName(const std::string& path) {

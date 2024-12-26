@@ -14,7 +14,7 @@ namespace backup {
 class BackUp {
  public:
   BackUp() = default;
-  ~BackUp() = default;
+  virtual ~BackUp() = default;
   // 将src中的所有文件保存到dest中
   virtual void Copy(const std::string& src, const std::string& dest) = 0;
   // 将目录树中的文件保存到指定位置

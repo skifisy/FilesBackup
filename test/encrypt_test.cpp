@@ -10,7 +10,7 @@
 using namespace backup;
 
 TEST(EncryptTest, EncryptFile) {
-  ::system("echo \"hello world\" > test.txt ");
+  EXPECT_EQ(::system("echo \"hello world\" > test.txt "), 0);
 
   // 加密和解密示例
   std::string input_file = "test.txt";
@@ -41,7 +41,7 @@ TEST(EncryptTest, EncryptFile) {
   EXPECT_EQ(memcmp(enc.key, enc2.key, 32), 0);
 
   EXPECT_EQ(::system("cmp test.txt decrypted.txt"), 0);
-  ::system("rm -f test.txt encrypted.dat decrypted.txt");
+  EXPECT_EQ(::system("rm -f test.txt encrypted.dat decrypted.txt"), 0);
 }
 
 TEST(EncryptTest, SHA256Test) {
@@ -52,6 +52,7 @@ TEST(EncryptTest, SHA256Test) {
   unsigned char hash[SHA256_SIZE];
   std::ifstream ifs("test.txt");
   EXPECT_TRUE(compute_file_sha256(ifs, hash));
-  EXPECT_EQ(HashToHexString(hash, SHA256_SIZE),"b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9");
-  ::system("rm -f test.txt");
+  EXPECT_EQ(HashToHexString(hash, SHA256_SIZE),
+            "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9");
+  EXPECT_EQ(::system("rm -f test.txt"), 0);
 }

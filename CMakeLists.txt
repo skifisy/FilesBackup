@@ -12,48 +12,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
+# 设置全局 C++ 编译选项
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -O2")
+
 # cmake -DCMAKE_BUILD_TYPE=Debug ..
-set(CMAKE_CXX_FLAGS_DEBUG "-g")         # 在 Debug 模式下生成调试信息
+set(CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG -fsanitize=address,leak,undefined")         # 在 Debug 模式下生成调试信息
 
 # 添加包含目录 (头文件所在目录)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-# 查找 Crypto++ 库
-# find_package(CryptoPP REQUIRED)
-# find_library(CRYPTOPP_LIBRARY NAMES cryptopp)
-# 查找OpenSSL的加密库
-find_library(CRYPTO_LIBRARY NAMES crypto)
-
-# 查找 src 目录下的所有 cpp 文件和 c 文件并存入变量 SRC_FILES
-file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/src/*.c)
-
-
-########  配置单元测试  ###########
-
-# 查找 Google Test 库
-find_package(GTest REQUIRED)
+add_subdirectory(src)
 
 # 启用测试
 enable_testing()
-
-# 查找测试代码的源文件
-file(GLOB_RECURSE TEST_FILES ${PROJECT_SOURCE_DIR}/test/*.cpp)
-
-# 添加测试代码的源文件
-add_executable(unit_tests ${TEST_FILES})
-
-list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/main.cpp)
-add_library(backuplib ${SRC_FILES})
-# target_link_libraries(backuplib CryptoPP::CryptoPP) 
-target_link_libraries(backuplib ${CRYPTO_LIBRARY}) 
-
-# 生成可执行文件
-add_executable(backup ${PROJECT_SOURCE_DIR}/src/main.cpp)
-target_link_libraries(backup backuplib)
-
-
-# 链接 GTest 库
-target_link_libraries(unit_tests GTest::GTest GTest::Main backuplib)
-
+add_subdirectory(test)
 # 添加测试
-add_test(NAME unit_tests COMMAND unit_tests)
+add_test(NAME unit_tests COMMAND ./test/unit_tests)

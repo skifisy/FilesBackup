@@ -22,6 +22,7 @@ class DumpTest : public ::testing::Test {
   void TearDown() override {
     ifs.close();
     ofs.close();
+    EXPECT_EQ(::system("rm -f temp"), 0);
   }
 };
 

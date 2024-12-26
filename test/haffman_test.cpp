@@ -15,7 +15,7 @@ TEST(HaffmanTest, CreateHaffmanCode) {
   std::unordered_map<char, uint64_t> mp;
   mp['a'] = 3;
   Haffman haff(mp);
-  auto tree = haff.createHaffmanTree();
+  [[maybe_unused]] auto tree = haff.createHaffmanTree();
   auto codes = haff.createHaffmanCode();
   EXPECT_EQ(codes['a'].second, std::bitset<256>(std::string("0")));
 
@@ -73,11 +73,11 @@ TEST(HaffmanTest, DumpBitSet) {
   EXPECT_EQ(set, set1);
   EXPECT_EQ(haff.LoadBitSet(set, 9, ifs), 2);
   EXPECT_EQ(set, set4);
-  ::system("rm -f bitset");
+  EXPECT_EQ(::system("rm -f bitset"), 0);
 }
 
 TEST(HaffmanTest, CompressFileTest) {
-  ::system("echo \"abcdabcd\" > haff");
+  EXPECT_EQ(::system("echo \"abcdabcd\" > haff"), 0);
   Haffman haff;
   auto& codes = haff.codes;
   codes['a'] = std::make_pair(3, std::bitset<256>("110"));
@@ -122,11 +122,11 @@ TEST(HaffmanTest, CompressFileTest) {
   EXPECT_EQ(size, 9);
   ofss.close();
   EXPECT_EQ(::system("cmp haff haff_tt"), 0);
-  ::system("rm -f haff haff_t haff_tt");
+  EXPECT_EQ(::system("rm -f haff haff_t haff_tt"), 0);
 }
 
 TEST(HaffmanTest, DumpAndRecoverTest) {
-  ::system("echo \"hello world\nnvvvvvvdddeeww\" > haff_d");
+  EXPECT_EQ(::system("echo \"hello world\nnvvvvvvdddeeww\" > haff_d"), 0);
   std::ifstream ifs("haff_d", std::ios::binary);
   std::ofstream ofs("haff_dd", std::ios::binary);
   Haffman haff;
@@ -159,11 +159,11 @@ TEST(HaffmanTest, DumpAndRecoverTest) {
   haff2.UnCompressFile(ifss, ofss);
   ofss.close();
   EXPECT_EQ(::system("cmp haff_d haff_ddd"), 0);
-  ::system("rm -f haff_d haff_dd haff_ddd");
+  EXPECT_EQ(::system("rm -f haff_d haff_dd haff_ddd"), 0);
 }
 TEST(HaffmanTest, DumpAndRecoverTest1) {
   // 测试超过1024字节的文件
-  ::system("truncate -s 1028 testfile");
+  EXPECT_EQ(::system("truncate -s 1028 testfile"), 0);
   std::ifstream ifs("testfile", std::ios::binary);
   std::ofstream ofs("testfile_compress", std::ios::binary);
   // 压缩：
@@ -199,7 +199,7 @@ TEST(HaffmanTest, DumpAndRecoverTest1) {
   haff2.UnCompressFile(ifss, ofss);
   ofss.close();
   EXPECT_EQ(::system("cmp testfile testfile_unpress"), 0);
-  ::system("rm -f testfile testfile_compress testfile_unpress");
+  EXPECT_EQ(::system("rm -f testfile testfile_compress testfile_unpress"),0);
 }
 
 TEST(HaffmanTest, DumpAndRecoverTest2) {
@@ -242,5 +242,5 @@ TEST(HaffmanTest, DumpAndRecoverTest2) {
   ifss.clear();
   ofss.close();
   EXPECT_EQ(::system("cmp test.jpg test_unpress.jpg"), 0);
-  ::system("rm -f test_compress.jpg test_unpress.jpg");
+  EXPECT_EQ(::system("rm -f test_compress.jpg test_unpress.jpg"), 0);
 }

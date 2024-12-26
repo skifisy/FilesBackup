@@ -289,7 +289,7 @@ void FileTree::RecoverRegularFile(std::shared_ptr<FileNode> pack_node,
     std::ofstream ofs(target_path, std::ios::binary);
     char buffer[BUFFER_SIZE];
     uint64_t size = meta.size;
-    for (int i = 0; i < size / BUFFER_SIZE; i++) {
+    for (uint64_t i = 0; i < size / BUFFER_SIZE; i++) {
       ifs.read(buffer, BUFFER_SIZE);
       ofs.write(buffer, BUFFER_SIZE);
     }

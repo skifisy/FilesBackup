@@ -78,8 +78,10 @@ TEST(FileTreeTest, LocateAndCreateDir) {
 }
 
 TEST(FileTreeTest, PackFileAdd) {
-  ::system("rm -rf dir");
-  ::system("mkdir dir && touch dir/f1 && touch dir/f2 && mkdir dir/dir");
+  EXPECT_EQ(::system("rm -rf dir"), 0);
+  EXPECT_EQ(
+      ::system("mkdir dir && touch dir/f1 && touch dir/f2 && mkdir dir/dir"),
+      0);
   FileTree tree;
   Path src = "dir";
   tree.PackFileAdd(src, "/");
@@ -113,10 +115,11 @@ TEST(FileTreeTest, PackFileAdd) {
   cur = root->children_["dir"];
   CheckOneFile(cur, "dir2/dir/dir", "dir", (src / Path("dir")).ToString(), true,
                FileType::DIR, 4096, false);
-  ::system("rm -rf dir");
+
+  EXPECT_EQ(::system("rm -rf dir"), 0);
 
   // 测试fifo
-  ::system("rm -f hello && mkfifo hello");
+  EXPECT_EQ(::system("rm -f hello && mkfifo hello"), 0);
   src = Path("hello").ToFullPath();
   tree.PackFileAdd(src, "");
   cur = tree.root_->children_["hello"];
@@ -124,7 +127,7 @@ TEST(FileTreeTest, PackFileAdd) {
                false);
 
   // 测试软链接
-  ::system("rm -f f1 f2 && touch f1 && ln -s f1 f2");
+  EXPECT_EQ(::system("rm -f f1 f2 && touch f1 && ln -s f1 f2"), 0);
   src = Path("f2").ToFullPath();
   tree.PackFileAdd(src, "");
   cur = tree.root_->children_["f2"];
@@ -138,12 +141,12 @@ TEST(FileTreeTest, PackFileAdd) {
   // 注意：这里的pack_path没有意义
   CheckOneFile(cur, "f1", "f1", linkto.ToString(), false, FileType::REG, 0,
                true);
-  ::system("rm -f f1 f2 hello");
+  EXPECT_EQ(::system("rm -f f1 f2 hello"), 0);
 }
 
 TEST(FileTreeTest, FileTreeDump) {
-  ::system("rm -rf for_recover");
-  ::system("echo \"hello world\" > f1");
+  EXPECT_EQ(::system("rm -rf for_recover"), 0);
+  EXPECT_EQ(::system("echo \"hello world\" > f1"), 0);
   FileTree tree;
   tree.PackFileAdd("f1", "");
 
@@ -161,15 +164,18 @@ TEST(FileTreeTest, FileTreeDump) {
   tree2.Recover("", ifs, "for_recover");
   EXPECT_EQ(::system("cmp f1 for_recover/f1"), 0);
   ifs.close();
-  ::system("rm -rf f1");
+  EXPECT_EQ(::system("rm -rf f1"), 0);
 }
 
 TEST(FileTreeTest, FileTreeDump2) {
-  ::system("rm -rf for_recover dir");
-  ::system(
-      "mkdir dir && echo \"hello world\" > dir/f1 && echo \"hello world "
-      "file2\" > dir/f2");
-  ::system("mkfifo dir/fifo && ln -s f1 dir/share && ln dir/f1 dir/f3");
+  EXPECT_EQ(::system("rm -rf for_recover dir"), 0);
+  EXPECT_EQ(
+      ::system(
+          "mkdir dir && echo \"hello world\" > dir/f1 && echo \"hello world "
+          "file2\" > dir/f2"),
+      0);
+  EXPECT_EQ(
+      ::system("mkfifo dir/fifo && ln -s f1 dir/share && ln dir/f1 dir/f3"), 0);
   FileTree tree;
   tree.PackFileAdd("dir", "");
   std::ofstream ofs("packfile", std::ios::binary);
@@ -193,14 +199,14 @@ TEST(FileTreeTest, FileTreeDump2) {
   EXPECT_EQ(::system("cmp dir/f1 for_recover/dir/f1"), 0);
   EXPECT_EQ(::system("cmp dir/f2 for_recover/dir/f2"), 0);
   EXPECT_EQ(::system("cmp dir/f3 for_recover/dir/f3"), 0);
-  ::system("echo \"test test...\" > dir/f1");
+  EXPECT_EQ(::system("echo \"test test...\" > dir/f1"), 0);
   EXPECT_EQ(::system("cmp for_recover/dir/f1 for_recover/dir/f3"), 0);
   // 检查link，检查file元信息（通过lstat系统调用）
-  ::system("rm -rf for_recover");
+  EXPECT_EQ(::system("rm -rf for_recover dir"), 0);
 }
 
 TEST(FileTreeTest, BigFilePackTest) {
-  ::system("rm -rf recover");
+  EXPECT_EQ(::system("rm -rf recover"), 0);
   FileTree tree;
   tree.PackFileAdd("test.jpg", "");
 
@@ -215,7 +221,7 @@ TEST(FileTreeTest, BigFilePackTest) {
   tree2.Recover("test.jpg", ifs, "recover");
   ifs.close();
   EXPECT_EQ(::system("cmp test.jpg recover/test.jpg"), 0);
-  ::system("rm -rf recover");
+  EXPECT_EQ(::system("rm -rf recover packfile"), 0);
 }
 
 // TODO: Recover目录下文件重名？

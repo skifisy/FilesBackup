@@ -85,8 +85,7 @@ size_t Haffman::CompressFile(std::ifstream& ifs, std::ofstream& ofs) {
     assert(ifs.good());
     ifs.read(buffer, BUFFER_SIZE);
     assert(!ifs.bad());
-    size_t count = ifs.gcount();
-    for (size_t i = 0; i < ifs.gcount(); i++) {
+    for (std::streamsize i = 0; i < ifs.gcount(); i++) {
       char byte = buffer[i];
       int code_len = codes[byte].first;
       std::bitset<256> code = codes[byte].second;
@@ -249,7 +248,7 @@ void Haffman::createHaffmanCodeSub(Node* root, int len, std::bitset<256> code) {
 size_t Haffman::DumpBitSet(std::bitset<256> set, int len, std::ofstream& ofs) {
   size_t ret = len / 8 + (len % 8 ? 1 : 0);
   // 将len按照字节对齐写入
-  for (size_t i = 0; i < len / 8; i++) {
+  for (int i = 0; i < len / 8; i++) {
     uint8_t byte = 0;
     // 取出最高的8位
     byte = static_cast<uint8_t>((set >> (256 - 8)).to_ulong());
