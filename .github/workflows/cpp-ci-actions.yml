@@ -1,0 +1,42 @@
+name: C++ CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:  # job-id
+    runs-on: ubuntu-latest  # 运行环境
+
+    steps:  # 运行步骤（多个）
+      # 1. 拉取代码（action写在actions/checkout@v3库中）
+      - name: Checkout code
+        uses: actions/checkout@v3  
+
+    # 2. 安装依赖
+      - name: Setup dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake make g++ clang-tidy cppcheck libgtest-dev libssl-dev
+
+    # 利用缓存，减少构建时间
+      - name: Cache build
+        uses: actions/cache@v3
+        with:
+          path: build
+          key: ${{ runner.os }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+    # 3. 配置项目，构建项目（生成makefile文件）
+      - name: Configure project
+        run: cmake -S . -B build
+
+    # 4. 编译项目
+      - name: Build project
+        run: cmake --build build --parallel
+    # 5. 运行测试
+      - name: Run tests
+        run: ctest --test-dir build
