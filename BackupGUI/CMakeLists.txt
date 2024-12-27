@@ -1,30 +1,58 @@
-# 最低CMake版本要求
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.5)
 
-# 项目名称和版本
-project(BackupGUI VERSION 1.0)
+project(qt-project VERSION 0.1 LANGUAGES CXX)
 
-# 设置 C++ 标准
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-# 设置 C 标准
-set(CMAKE_C_STANDARD 99)
-set(CMAKE_C_STANDARD_REQUIRED True)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
-# 设置全局 C++ 编译选项
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -O2")
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# cmake -DCMAKE_BUILD_TYPE=Debug ..
-set(CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG -fsanitize=address,leak,undefined")         # 在 Debug 模式下生成调试信息
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
-# 添加包含目录 (头文件所在目录)
-include_directories(${PROJECT_SOURCE_DIR}/include)
+set(PROJECT_SOURCES
+        main.cpp
+        mainwindow.cpp mainwindow.h mainwindow.ui
+        mydialog.h mydialog.cpp mydialog.ui
+)
 
-# add_subdirectory(src)
+if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    qt_add_executable(qt-project
+        MANUAL_FINALIZATION
+        ${PROJECT_SOURCES}
+    )
+# Define target properties for Android with Qt 6 as:
+#    set_property(TARGET qt-project APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
+#                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
+# For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
+else()
+    if(ANDROID)
+        add_library(qt-project SHARED
+            ${PROJECT_SOURCES}
+        )
+# Define properties for Android with Qt 5 after find_package() calls as:
+#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
+    else()
+        add_executable(qt-project
+            ${PROJECT_SOURCES}
+        )
+    endif()
+endif()
 
-# # 启用测试
-# enable_testing()
-# add_subdirectory(test)
-# # 添加测试
-# add_test(NAME unit_tests COMMAND ./test/unit_tests)
+target_link_libraries(qt-project PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+
+set_target_properties(qt-project PROPERTIES
+    MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
+    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+    MACOSX_BUNDLE TRUE
+    WIN32_EXECUTABLE TRUE
+)
+
+if(QT_VERSION_MAJOR EQUAL 6)
+    qt_finalize_executable(qt-project)
+endif()
