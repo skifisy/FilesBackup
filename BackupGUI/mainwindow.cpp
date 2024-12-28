@@ -7,113 +7,115 @@
 #include <QProgressDialog>
 #include <QTimer>
 #include <QAction>
-
+#include <QScreen>
+#include "backupconfigdialog.h"
+#include <QFileDialog>
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::close);
-    connect(ui->action1, &QAction::triggered, this, [&]() {
-        QMessageBox::information(this, "Triggered", "我是菜单项, 你不要调戏我...");
-    });
-}
-
-MainWindow::~MainWindow()
-{
-    delete ui;
-}
-
-
-void MainWindow::on_pushButton_2_clicked()
-{
-    MyDialog dialog;
-    connect(&dialog, &MyDialog::finished, this, [=](int res){
-       qDebug() << "result: " << res;
-    });
-    int ret = dialog.exec();
-    if(ret == QDialog::Accepted)
-    {
-        qDebug() << "accept button clicked...";
-        // 显示主窗口
-        MainWindow* w = new MainWindow;
-        w->show();
+    // 获取屏幕对象
+    QScreen *screen = QApplication::primaryScreen();
+    if (screen) {
+        // 获取屏幕的可用区域
+        QRect screenGeometry = screen->availableGeometry();
+        // 计算窗口居中的位置
+        int x = (screenGeometry.width() - this->width()) / 2;
+        int y = (screenGeometry.height() - this->height()) / 2;
+        // 设置窗口位置
+        this->move(x, y);
     }
-    else if(ret == QDialog::Rejected)
-    {
-        qDebug() << "reject button clicked...";
-        // 不显示主窗口
-    }
-    else
-    {
-        // ret == 666
-        qDebug() << "done button clicked...";
-        // 根据需求进行逻辑处理
-    }
+    ui->backupFileList->setColumnWidth(0, 200);
+    ui->backupFileList->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    backupDialog = new BackupConfigDialog(this);
+    connect(
+        backupDialog,
+        &BackupConfigDialog::backupFile,
+        this,
+        &MainWindow::on_backupFiles);
 }
 
+MainWindow::~MainWindow() { delete ui; }
 
-void MainWindow::on_pushButton_3_clicked()
+void MainWindow::on_startBackupButton_clicked()
 {
-    QMessageBox::about(this, "about",  "这是一个简单的消息提示框!!!");
-    QMessageBox::critical(this, "critical", "这是一个错误对话框-critical...");
-    int ret = QMessageBox::question(this, "question",
-             "你要保存修改的文件内容吗???",
-              QMessageBox::Save|QMessageBox::Cancel,
-              QMessageBox::Cancel);
-    if(ret == QMessageBox::Save)
-    {
-        QMessageBox::information(this, "information", "恭喜你保存成功了, o(*￣︶￣*)o!!!");
+    if (files_to_pack.empty()) {
+        QMessageBox::information(
+            this,
+            "提示",
+            "请选择需要备份的文件。",
+            QMessageBox::Yes,
+            QMessageBox::Yes);
+        return;
     }
-    else if(ret == QMessageBox::Cancel)
-    {
-        QMessageBox::warning(this, "warning", "你放弃了保存, ┭┮﹏┭┮ !!!");
+    backupDialog->show();
+}
+
+void MainWindow::on_addDirectoryButton_clicked()
+{
+    // 打开文件夹选择对话框
+    QString folderPath = QFileDialog::getExistingDirectory(
+        this,
+        "选择文件夹",
+        "",
+        QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+    // 如果选择了文件夹，更新标签显示路径
+    if (!folderPath.isEmpty() && !files_to_pack.contains(folderPath)) {
+        files_to_pack.insert(folderPath);
+        QFileInfo fileInfo(folderPath);
+        QTreeWidgetItem *rootItem = new QTreeWidgetItem(ui->backupFileList);
+        rootItem->setText(0, fileInfo.fileName());
+        rootItem->setText(1, folderPath);
+        rootItem->setCheckState(0, Qt::Checked);
     }
 }
 
-
-void MainWindow::on_pushButton_4_clicked()
+void MainWindow::on_addFileButton_clicked()
 {
-    int ret = QInputDialog::getInt(this, "年龄", "您的当前年龄: ", 10, 1, 100, 2);
-    QMessageBox::information(this, "年龄", "您的当前年龄: " + QString::number(ret));
+    // 弹出文件对话框，允许多选文件
+    QStringList files = QFileDialog::getOpenFileNames(
+        this,
+        "选择文件",
+        "",
+        "所有文件 (*);;文本文件 (*.txt);;图片文件 (*.png *.jpg)");
+
+    if (!files.isEmpty()) {
+        for (const QString &file : files) {
+            if (!files_to_pack.contains(file)) {
+                files_to_pack.insert(file);
+                QFileInfo fileInfo(file);
+                QTreeWidgetItem *rootItem =
+                    new QTreeWidgetItem(ui->backupFileList);
+                rootItem->setText(0, fileInfo.fileName());
+                rootItem->setText(1, file);
+                rootItem->setCheckState(0, Qt::Checked);
+            } else {
+                statusBar()->showMessage("文件" + file + "已存在", 5000);
+            }
+        }
+    }
 }
 
-
-void MainWindow::on_pushButton_5_clicked()
+void MainWindow::on_clearFileButton_clicked()
 {
-    // 1. 创建进度条对话框窗口对象
-    QProgressDialog *progress = new QProgressDialog(
-                "正在拷贝数据...", "取消拷贝", 0, 100, this);
-    // 2. 初始化并显示进度条窗口
-    progress->setWindowTitle("请稍后");
-    progress->setWindowModality(Qt::WindowModal);
-    progress->show();
-
-    // 3. 更新进度条
-    static int value = 0;
-    QTimer *timer = new QTimer;
-    connect(timer, &QTimer::timeout, this, [=]()
-    {
-         progress->setValue(value);
-         value++;
-         // 当value > 最大值的时候
-         if(value > progress->maximum())
-         {
-             timer->stop();
-             value = 0;
-             delete progress;
-             delete timer;
-         }
-    });
-
-    connect(progress, &QProgressDialog::canceled, this, [=]()
-    {
-        timer->stop();
-        value = 0;
-        delete progress;
-        delete timer;
-    });
-
-    timer->start(50);
+    ui->backupFileList->clear();
+    files_to_pack.clear();
 }
 
+void MainWindow::on_deleteFileButton_clicked()
+{
+    auto list = ui->backupFileList->selectedItems();
+    for (QTreeWidgetItem *ptr : list) {
+        files_to_pack.remove(ptr->text(1));
+        delete ptr;
+    }
+}
+
+void MainWindow::on_backupFiles(QSharedPointer<BackupConfig> config)
+{
+    qDebug() << config->backPath << "  " << config->filename;
+    // TODO: backupLogic
+    //
+}

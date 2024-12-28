@@ -11,18 +11,18 @@ class MyDialog : public QDialog
 {
     Q_OBJECT
 
-public:
+  public:
     explicit MyDialog(QWidget *parent = nullptr);
     ~MyDialog();
 
-private slots:
+  private slots:
     void on_acceptButton_clicked();
 
     void on_doneButton_clicked();
 
     void on_pushButton_3_clicked();
 
-private:
+  private:
     Ui::MyDialog *ui;
 };
 

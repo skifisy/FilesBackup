@@ -1,19 +1,22 @@
 #include <gtest/gtest.h>
 #include "backup_impl.h"
 using namespace backup;
-class MyClassTestFixture : public ::testing::Test {
-protected:
-    void SetUp() override {
+class MyClassTestFixture : public ::testing::Test
+{
+  protected:
+    void SetUp() override
+    {
         // 在每个测试之前执行
         backup = new BackUpImpl();
     }
 
-    void TearDown() override {
+    void TearDown() override
+    {
         // 在每个测试之后执行
         delete backup;
     }
 
-    BackUp * backup;
+    BackUp *backup;
 };
 
 // 使用测试夹具

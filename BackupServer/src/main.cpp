@@ -7,8 +7,9 @@
 
 using namespace backup;
 
-int main(int argc, char* argv[]) {
-  std::cout << "hello world" << std::endl;
+int main(int argc, char *argv[])
+{
+    std::cout << "hello world" << std::endl;
 
-  return 0;
+    return 0;
 }

@@ -6,11 +6,12 @@
 #include "pack_impl.h"
 namespace backup {
 
-void FilePackImpl::Pack(std::string src, std::string dest) {
-  // 1. 遍历src，构建文件树
-  // 2. 将文件树打包为一个大文件
+void FilePackImpl::Pack(std::string src, std::string dest)
+{
+    // 1. 遍历src，构建文件树
+    // 2. 将文件树打包为一个大文件
 
-  // 思路2：边遍历，边打包（问题：各种data的offset如何计算？）
+    // 思路2：边遍历，边打包（问题：各种data的offset如何计算？）
 }
 
 void FilePackImpl::UnPack(std::string src, std::string dest) {}
@@ -19,4 +20,4 @@ void FilePackImpl::PackBatch() {}
 
 void FilePackImpl::UnPackBatch() {}
 
-}  // namespace backup
+} // namespace backup

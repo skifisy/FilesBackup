@@ -1,0 +1,98 @@
+##
+# @brief
+# 在Windows下需要安装llvm，然后在vscode上安装C/C++插件，修改"C_Cpp.clang_format_path"
+# 路径指向clang-format.exe
+#
+
+Standard: c++20                             # 按照C++20标准排版
+IndentWidth: 4                              # 缩进4字符
+TabWidth: 4                                 # tab宽度4字符
+UseTab: Never                               # 禁止使用tab
+ColumnLimit: 80                             # 列宽80
+
+AccessModifierOffset: -2                    # public缩进2字符
+
+CompactNamespaces: false                    # 不压缩名字空间
+FixNamespaceComments: true                  # 在名字空间尾部注释
+NamespaceIndentation: None                  # 名字空间不缩进
+
+AlignAfterOpenBracket: AlwaysBreak          # 实参形参对齐
+AlignConsecutiveAssignments: false          # 连续赋值不对齐
+AlignConsecutiveDeclarations: false         # 连续声明不对齐
+AlignEscapedNewlines: Right                 # 在尾部对齐反斜杠
+AlignOperands: true                         # 对齐操作符
+AlignTrailingComments: true                 # 对齐尾部的注释
+
+AllowShortBlocksOnASingleLine: true         # 允许短块在一行
+AllowShortCaseLabelsOnASingleLine: false    # 不允许case与后面的语句在一行
+AllowShortFunctionsOnASingleLine: All       # 允许短函数在一行声明，也可以是Inline
+AllowShortIfStatementsOnASingleLine: true   # 允许短的分支在一行
+
+AlwaysBreakTemplateDeclarations: true       # 在template模板参数后总是换行
+BinPackArguments: false                     # 调用函数实参分行显示
+
+Cpp11BracedListStyle: true                  # 识别C++11的初始化列表
+BreakBeforeInheritanceComma: true           # 模板参数换行对齐
+BreakBeforeTernaryOperators: true           # 三操作符对齐
+BreakConstructorInitializers: BeforeComma   # 构造函数初始化列表对齐
+BreakStringLiterals: true                   # 允许分裂长大字符串
+
+ContinuationIndentWidth: 4                  # 连续参数缩进4字符
+IndentPPDirectives: AfterHash               # include分层缩进
+IndentWrappedFunctionNames: false           # 函数名不缩进
+
+JavaScriptQuotes: Double                    # 采用双引号作为js的字符串
+JavaScriptWrapImports: true                 # import分行
+
+KeepEmptyLinesAtTheStartOfBlocks: false     # 不允许一个块以空行开始
+MaxEmptyLinesToKeep: 1                      # 代码间最多允许1行空行
+
+PointerAlignment: Right                     # 指针引用右结合
+ReflowComments: true                        # 允许长大折叠注释
+
+SortIncludes: false                         # 禁止对include重排
+SortUsingDeclarations: false                # 禁止对using重排
+
+SpaceAfterCStyleCast: true                  # 识别C类型的类型转换
+SpaceAfterTemplateKeyword: true             # template关键字后总是空格
+SpaceBeforeAssignmentOperators: true        # 等号两端空格
+SpaceBeforeParens: ControlStatements        # 在if后空格
+SpaceInEmptyParentheses: false              # 空括号不空格
+SpacesBeforeTrailingComments: 1             # 尾部注释空格
+
+SpacesInAngles: false                       # 尖括号不空格
+SpacesInCStyleCastParentheses: false        # C类型转换的括号内不空格
+SpacesInContainerLiterals: false            # 数组初始化列表不空格
+SpacesInParentheses: false                  # 小括号内不空格
+SpacesInSquareBrackets: false               # 中括号内不空格
+
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 60
+
+BreakBeforeBraces: Custom                   # 控制花括号的缩进
+BraceWrapping:
+    AfterClass:      true                   # class声明之后缩进
+    AfterControlStatement: false
+    AfterEnum:       true
+    AfterFunction:   true
+    AfterNamespace:  false
+    AfterStruct:     true
+    AfterUnion:      true
+    BeforeCatch:     false
+    BeforeElse:      false
+    SplitEmptyFunction: false
+    SplitEmptyRecord: false
+    SplitEmptyNamespace: true
+    IndentBraces:    false
+
+#BinPackArguments: false
+BinPackParameters: false
+AllowAllParametersOfDeclarationOnNextLine: false    # 允许函数声明参数放在下一行
+
+# requires语句不与后面的语句一起
+RequiresClausePosition: OwnLine
+IndentRequires: true    # 退格requires

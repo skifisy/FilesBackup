@@ -8,7 +8,4 @@
 //
 #include "compress.h"
 
-namespace backup
-{
-  
-} // namespace backup
+namespace backup {} // namespace backup

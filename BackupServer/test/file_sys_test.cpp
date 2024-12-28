@@ -3,59 +3,65 @@
 #include "file_sys.h"
 using namespace backup;
 
-TEST(PathTest, PathConstructor) {
-  Path p = "/hello/";
-  EXPECT_EQ(p.ToString(), "/hello");
-  Path q = p;
-  EXPECT_EQ(q.ToString(), "/hello");
+TEST(PathTest, PathConstructor)
+{
+    Path p = "/hello/";
+    EXPECT_EQ(p.ToString(), "/hello");
+    Path q = p;
+    EXPECT_EQ(q.ToString(), "/hello");
 }
 
-TEST(PathTest, PathJudge) {
-  Path p = "hello";
-  EXPECT_TRUE(p.IsRelative());
-  p = "/hello/h";
-  EXPECT_TRUE(!p.IsRelative());
-  p = "";
-  EXPECT_TRUE(p.IsRelative());
+TEST(PathTest, PathJudge)
+{
+    Path p = "hello";
+    EXPECT_TRUE(p.IsRelative());
+    p = "/hello/h";
+    EXPECT_TRUE(!p.IsRelative());
+    p = "";
+    EXPECT_TRUE(p.IsRelative());
 }
 
-TEST(PathTest, SplitPath) {
-  Path p = "hello/world";
-  std::vector<std::string> path_list = {"hello", "world"};
-  EXPECT_EQ(p.SplitPath(), path_list);
+TEST(PathTest, SplitPath)
+{
+    Path p = "hello/world";
+    std::vector<std::string> path_list = {"hello", "world"};
+    EXPECT_EQ(p.SplitPath(), path_list);
 
-  p = "hello";
-  path_list = {"hello"};
-  EXPECT_EQ(p.SplitPath(), path_list);
+    p = "hello";
+    path_list = {"hello"};
+    EXPECT_EQ(p.SplitPath(), path_list);
 
-  p = "";
-  path_list = {};
-  EXPECT_EQ(p.SplitPath(), path_list);
+    p = "";
+    path_list = {};
+    EXPECT_EQ(p.SplitPath(), path_list);
 }
 
-TEST(PathTest, GetFileLinkTo) {
-  EXPECT_EQ(::system("rm -f f2"), 0);
-  EXPECT_EQ(::system("ln -s ./dir1/f1 f2"), 0);
-  Path p = GetFileLinkTo("f2");
-  EXPECT_EQ(p.ToString(), "./dir1/f1");
-  EXPECT_EQ(::system("rm -f f2"), 0);
+TEST(PathTest, GetFileLinkTo)
+{
+    EXPECT_EQ(::system("rm -f f2"), 0);
+    EXPECT_EQ(::system("ln -s ./dir1/f1 f2"), 0);
+    Path p = GetFileLinkTo("f2");
+    EXPECT_EQ(p.ToString(), "./dir1/f1");
+    EXPECT_EQ(::system("rm -f f2"), 0);
 }
 
-TEST(PathTest, FullPath) {
-  Path p = "./dir/f";
-  Path fullpath = p.ToFullPath();
-  EXPECT_EQ(fullpath.ToString(), (GetCurPath() / p).ToString());
+TEST(PathTest, FullPath)
+{
+    Path p = "./dir/f";
+    Path fullpath = p.ToFullPath();
+    EXPECT_EQ(fullpath.ToString(), (GetCurPath() / p).ToString());
 }
 
-TEST(PathTest, ParentPath) {
-  Path p = "./dir/f/";
-  Path parent = p.ParentPath();
-  EXPECT_EQ(parent.ToString(), "./dir");
-  p = "dir";
-  parent = p.ParentPath();
-  EXPECT_EQ(parent.ToString(), "");
+TEST(PathTest, ParentPath)
+{
+    Path p = "./dir/f/";
+    Path parent = p.ParentPath();
+    EXPECT_EQ(parent.ToString(), "./dir");
+    p = "dir";
+    parent = p.ParentPath();
+    EXPECT_EQ(parent.ToString(), "");
 
-  p = "";
-  parent = p.ParentPath();
-  EXPECT_EQ(parent.ToString(), "");
+    p = "";
+    parent = p.ParentPath();
+    EXPECT_EQ(parent.ToString(), "");
 }

@@ -3,9 +3,7 @@
 #include <QDebug>
 #include <QVBoxLayout>
 #include <QPushButton>
-#include "file_meta.h"
-#include <fstream>
-#include "filesystem"
+#include "fileexplore.h"
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -13,9 +11,7 @@ int main(int argc, char *argv[])
     MainWindow w;
     // 显示窗口
     w.show();
-    backup::BackupFileHeader header;
-    std::ofstream ofs("qt-test-ofs");
-    header.Dump(ofs);
-    qDebug() << backup::GetCurPath().ToString().c_str();
+    //    FileExplorer fileExplorer;
+    //    fileExplorer.show();
     return a.exec();
 }
