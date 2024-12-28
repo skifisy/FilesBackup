@@ -73,6 +73,10 @@ class Path
     fs::path path_;
 };
 
+/**
+ * @brief 返回dir中的所有文件
+ * @return 文件名的vector
+ */
 std::vector<Path> GetFilesFromDir(const Path &path);
 
 // 获取软链接指向的文件路径

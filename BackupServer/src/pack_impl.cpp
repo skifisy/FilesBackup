@@ -16,8 +16,12 @@ void FilePackImpl::Pack(std::string src, std::string dest)
 
 void FilePackImpl::UnPack(std::string src, std::string dest) {}
 
-void FilePackImpl::PackBatch() {}
-
-void FilePackImpl::UnPackBatch() {}
+void FilePackImpl::PackBatch(
+    const PackConfig &config,
+    const std::vector<std::string> &src_path,
+    const std::string &target_path)
+{
+    
+}
 
 } // namespace backup

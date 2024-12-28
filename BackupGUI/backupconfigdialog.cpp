@@ -10,9 +10,10 @@ BackupConfigDialog::BackupConfigDialog(QWidget *parent)
 {
     ui->setupUi(this);
     buttonGroup = new QButtonGroup(this);
-    buttonGroup->addButton(ui->noneRadioButton, none);
-    buttonGroup->addButton(ui->everydayRadioButton, every_day);
-    buttonGroup->addButton(ui->everyweekRadioButton, every_week);
+    buttonGroup->addButton(ui->noneRadioButton, RegularTimeType::none);
+    buttonGroup->addButton(ui->everydayRadioButton, RegularTimeType::every_day);
+    buttonGroup->addButton(
+        ui->everyweekRadioButton, RegularTimeType::every_week);
 }
 
 BackupConfigDialog::~BackupConfigDialog() { delete ui; }

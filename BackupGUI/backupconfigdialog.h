@@ -3,6 +3,7 @@
 
 #include <QButtonGroup>
 #include <QDialog>
+#include "file_meta.h"
 
 enum RegularTimeType
 {
@@ -10,7 +11,6 @@ enum RegularTimeType
     every_day = 1,
     every_week = 2
 };
-
 struct BackupConfig
 {
     QString filename;

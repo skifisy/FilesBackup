@@ -5,6 +5,8 @@
 #include <vector>
 #include <QSet>
 #include "backupconfigdialog.h"
+#include "file_sys.h"
+#include <QTreeWidgetItem>
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -31,12 +33,19 @@ class MainWindow : public QMainWindow
 
     void on_backupFiles(QSharedPointer<BackupConfig> config);
 
-  private:
+    void on_browseLocalFile_clicked();
+
+    void on_browseRestoreDirectoryButton_clicked();
+
+private:
+    /// 获取文件类型
+    QString getTypeTag(backup::FileType type);
+    QString getTypeTag(const QString &file_path);
+
+    void generateTreeItem(const backup::Path &dir, QTreeWidgetItem *parent);
+
     Ui::MainWindow *ui;
-    // first: filename
-    // second: filepath
-    std::vector<std::pair<QString, QString>> files_to_save;
-    // QString: full path to files
+    // QString: 文件的绝对路径
     QSet<QString> files_to_pack;
     BackupConfigDialog *backupDialog;
 };

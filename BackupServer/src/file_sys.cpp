@@ -83,7 +83,6 @@ FileType Path::GetFileType() const
         break;
     default:
         return FileType::UNKNOWN;
-        printf("an unknown type.\n");
         break;
     }
 }
@@ -112,7 +111,7 @@ std::vector<std::string> Path::SplitPath() const
 {
     std::string p = ToString();
     if (p.empty()) return {};
-    std::size_t start = 0, end = std::string::npos;
+    std::size_t start = 0, end;
     std::vector<std::string> str_list;
     while ((end = p.find('/', start)) != std::string::npos) {
         str_list.emplace_back(p.substr(start, end - start));
@@ -153,7 +152,6 @@ Path GetFileLinkTo(const std::string &path)
     ssize_t len = readlink(path.c_str(), targetPath, sizeof(targetPath) - 1);
     if (len == -1) {
         throw std::runtime_error("Error reading symbolic link");
-        return {};
     }
     // 读取成功，添加字符串结束符
     targetPath[len] = '\0';

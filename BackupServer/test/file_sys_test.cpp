@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <unordered_set>
 #include "file_sys.h"
 using namespace backup;
 
@@ -64,4 +65,17 @@ TEST(PathTest, ParentPath)
     p = "";
     parent = p.ParentPath();
     EXPECT_EQ(parent.ToString(), "");
+}
+
+TEST(PathTest, GetFilesFromDir)
+{
+    EXPECT_EQ(::system("mkdir dir && touch dir/f1 dir/f2 dir/f3"), 0);
+    std::unordered_set<std::string> st;
+    st.insert("f1");
+    st.insert("f2");
+    st.insert("f3");
+    for (auto &path : GetFilesFromDir("dir")) {
+        EXPECT_EQ(st.contains(path.ToString()), true);
+    }
+    EXPECT_EQ(::system("rm -rf dir"), 0);
 }
