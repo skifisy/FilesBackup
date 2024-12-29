@@ -7,7 +7,7 @@
 // @email 743544510@qq.com
 //
 #pragma once
-#include <ctype.h>
+#include <stdint.h>
 
 #include <bitset>
 #include <fstream>
@@ -114,6 +114,5 @@ class Haffman
     size_t DumpBitSet(std::bitset<256> set, int len, std::ofstream &ofs);
     size_t LoadBitSet(std::bitset<256> &set, int len, std::ifstream &ifs);
 };
-
 
 } // namespace backup
