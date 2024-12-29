@@ -300,4 +300,5 @@ size_t Haffman::LoadBitSet(std::bitset<256> &set, int len, std::ifstream &ifs)
     return ret;
 }
 
+
 } // namespace backup

@@ -9,24 +9,44 @@
 
 #pragma once
 #include <string>
+#include "file_meta.h"
+#include "file_tree.h"
 namespace backup {
+
+struct BackupConfig
+{
+    // 打包文件的名字
+    std::string backup_name;
+    // 打包文件的存储地址
+    std::string target_dir;
+    // 是否加密
+    bool is_encrypt;
+    // 文件密码
+    std::string password;
+};
+
+struct BackupHeader
+{
+    char magic[4] = "BUK";
+    bool is_encrypt;
+    // hash
+    size_t Dump(std::ofstream &ofs);
+    size_t Load(std::ifstream &ifs);
+};
 
 class BackUp
 {
   public:
+    virtual void BackupBatch(
+        const BackupConfig &config,
+        const std::vector<std::string> &src_path) = 0;
+
+    virtual void RestoreBatch() = 0;
+    virtual std::vector<std::shared_ptr<FileNode>>
+    GetFileList(const std::string &backup_path) = 0;
+
     BackUp() = default;
     virtual ~BackUp() = default;
-    // 将src中的所有文件保存到dest中
-    virtual void Copy(const std::string &src, const std::string &dest) = 0;
-    // 将目录树中的文件保存到指定位置
-    // TODO: 压缩、打包、加密
-    virtual void Save(const std::string &src, const std::string &dest) = 0;
-    // 将目录树中的文件恢复到指定位置
-    // TODO: 解压、解包、解密
-    virtual void Recover(const std::string &src, const std::string &dest) = 0;
-
-  private:
-    /* data */
 };
 
 } // namespace backup

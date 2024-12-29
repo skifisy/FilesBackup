@@ -9,6 +9,7 @@
 #include <gtest/gtest.h>
 #define private public
 #include "haffman.h"
+#include "compress.h"
 using namespace backup;
 
 TEST(HaffmanTest, CreateHaffmanCode)
@@ -247,6 +248,24 @@ TEST(HaffmanTest, DumpAndRecoverTest2)
     haff2.UnCompressFile(ifss, ofss);
     ifss.clear();
     ofss.close();
+    EXPECT_EQ(::system("cmp test.jpg test_unpress.jpg"), 0);
+    EXPECT_EQ(::system("rm -f test_compress.jpg test_unpress.jpg"), 0);
+}
+
+TEST(CompressTest, CompressAndDecompress)
+{
+    std::ifstream ifs("test.jpg", std::ios::binary);
+    std::ofstream ofs("test_compress.jpg", std::ios::binary);
+    // 压缩
+    Compress comp1(ifs, ofs);
+    comp1.CompressFile();
+    ofs.flush();
+    std::ifstream ifss("test_compress.jpg", std::ios::binary);
+    std::ofstream ofss("test_unpress.jpg", std::ios::binary);
+    // 解压
+    Compress comp2(ifss, ofss);
+    comp2.DecompressFile();
+    ofss.flush();
     EXPECT_EQ(::system("cmp test.jpg test_unpress.jpg"), 0);
     EXPECT_EQ(::system("rm -f test_compress.jpg test_unpress.jpg"), 0);
 }

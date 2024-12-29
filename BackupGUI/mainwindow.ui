@@ -29,7 +29,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="iconSize">
        <size>
@@ -488,6 +488,100 @@
        <attribute name="title">
         <string>任务</string>
        </attribute>
+       <widget class="QTreeWidget" name="taskList">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>40</y>
+          <width>746</width>
+          <height>481</height>
+         </rect>
+        </property>
+        <property name="contextMenuPolicy">
+         <enum>Qt::CustomContextMenu</enum>
+        </property>
+        <property name="sortingEnabled">
+         <bool>false</bool>
+        </property>
+        <column>
+         <property name="text">
+          <string>文件名</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>下一次备份时间</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>备份频率</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>是否加密</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>本地路径</string>
+         </property>
+        </column>
+       </widget>
+       <widget class="QLabel" name="label_3">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>101</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>定时任务列表</string>
+        </property>
+       </widget>
+       <widget class="QToolButton" name="clearTaskButton">
+        <property name="geometry">
+         <rect>
+          <x>684</x>
+          <y>540</y>
+          <width>71</width>
+          <height>26</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>清空</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/icons/icons/clear.png</normaloff>:/icons/icons/clear.png</iconset>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextBesideIcon</enum>
+        </property>
+       </widget>
+       <widget class="QToolButton" name="deleteTaskButton">
+        <property name="geometry">
+         <rect>
+          <x>600</x>
+          <y>540</y>
+          <width>71</width>
+          <height>26</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>删除</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/icons/icons/delete.png</normaloff>:/icons/icons/delete.png</iconset>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextBesideIcon</enum>
+        </property>
+       </widget>
       </widget>
      </widget>
     </item>

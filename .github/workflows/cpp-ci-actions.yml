@@ -19,7 +19,7 @@ jobs:
 
     # 2. 安装依赖
       - name: Setup dependencies
-        run: sudo apt-get update && sudo apt-get install -y cmake make g++ clang-tidy cppcheck libgtest-dev libssl-dev qtbase5-dev qt5-qmake libqt5widgets5 libqt5gui5 libqt5core5a
+        run: sudo apt-get update && sudo apt-get install -y cmake make g++ clang-tidy cppcheck libgtest-dev libssl-dev qtbase5-dev qt5-qmake libqt5widgets5 libqt5gui5 libqt5core5a nlohmann-json3-dev
 
     # 利用缓存，减少构建时间
       - name: Cache build

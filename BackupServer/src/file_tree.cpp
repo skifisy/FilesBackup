@@ -7,12 +7,12 @@ namespace backup {
 
 FileNode::FileNode(std::ifstream &ifs) { meta_.Load(ifs); }
 
-void FileTree::PackFileAdd(const Path &src, const Path &dest)
+void FileTree::PackFileAdd(const Path &src, const Path &dest, bool recursively)
 {
     // assert(!src.IsRelative());
     assert(dest.IsRelative());
     std::shared_ptr<FileNode> file_node = LocateAndCreateDir(dest);
-    PackFileAdd(src, file_node);
+    PackFileAdd(src, file_node, recursively);
 }
 
 void FileTree::FullDump(std::ofstream &ofs)
@@ -72,7 +72,10 @@ void FileTree::Recover(
     }
 }
 
-void FileTree::PackFileAdd(const Path &src, std::shared_ptr<FileNode> dest)
+void FileTree::PackFileAdd(
+    const Path &src,
+    std::shared_ptr<FileNode> dest,
+    bool recursively)
 {
     std::shared_ptr<FileNode> cur = nullptr;
     auto ret = dest->children_.find(src.FileName());
@@ -90,10 +93,12 @@ void FileTree::PackFileAdd(const Path &src, std::shared_ptr<FileNode> dest)
     case FileType::FIFO:
         break;
     case FileType::DIR:
-        // 进入下一级文件夹
-        files_in_dir = GetFilesFromDir(src);
-        for (Path &file_name : files_in_dir) {
-            PackFileAdd(src / file_name, cur);
+        if (recursively) {
+            // 进入下一级文件夹
+            files_in_dir = GetFilesFromDir(src);
+            for (Path &file_name : files_in_dir) {
+                PackFileAdd(src / file_name, cur);
+            }
         }
         break;
     case FileType::FLNK:

@@ -16,7 +16,8 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -O2")
 
 # cmake -DCMAKE_BUILD_TYPE=Debug ..
-set(CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG -fsanitize=address,leak,undefined")         # 在 Debug 模式下生成调试信息
+#  -fsanitize=address,leak,undefined
+set(CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG")
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 

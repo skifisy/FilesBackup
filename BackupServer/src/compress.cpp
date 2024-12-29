@@ -8,4 +8,24 @@
 //
 #include "compress.h"
 
-namespace backup {} // namespace backup
+namespace backup {
+void Compress::CompressFile()
+{
+    haff_tree.CountFreq(src);
+    haff_tree.createHaffmanTree();
+    haff_tree.createHaffmanCode();
+    haff_tree.DumpFreq(dest);
+    src.clear();
+    src.seekg(0);
+    haff_tree.CompressFile(src, dest);
+}
+
+void Compress::DecompressFile()
+{
+    haff_tree.RecoverFreq(src);
+    haff_tree.createHaffmanTree();
+    haff_tree.createHaffmanCode();
+    haff_tree.UnCompressFile(src, dest);
+}
+
+} // namespace backup
