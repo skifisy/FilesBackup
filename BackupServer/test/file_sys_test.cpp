@@ -79,3 +79,13 @@ TEST(PathTest, GetFilesFromDir)
     }
     EXPECT_EQ(::system("rm -rf dir"), 0);
 }
+
+TEST(PathTest, RemoveFile)
+{
+    EXPECT_TRUE(::system("touch f1") == 0);
+    EXPECT_TRUE(::system("mkdir dir && touch dir/f1 dir/f2") == 0);
+    EXPECT_TRUE(RemoveFile(std::string("f1")));
+    EXPECT_TRUE(RemoveAll(std::string("dir")));
+    EXPECT_FALSE(::system("test -e f1") == 0);
+    EXPECT_FALSE(::system("test -e dir") == 0);
+}

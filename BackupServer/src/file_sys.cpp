@@ -150,9 +150,7 @@ Path GetFileLinkTo(const std::string &path)
     // 用来存放软链接指向的文件路径
     char targetPath[PATH_MAX];
     ssize_t len = readlink(path.c_str(), targetPath, sizeof(targetPath) - 1);
-    if (len == -1) {
-        throw std::runtime_error("Error reading symbolic link");
-    }
+    if (len == -1) { throw std::runtime_error("Error reading symbolic link"); }
     // 读取成功，添加字符串结束符
     targetPath[len] = '\0';
     return {std::string(targetPath)};
@@ -237,4 +235,7 @@ bool MakeFifo(const std::string &filename, mode_t mode)
     return ret;
 }
 
+bool RemoveFile(const Path &path) noexcept { return fs::remove(path.path_); }
+
+bool RemoveAll(const Path &path) { return fs::remove_all(path.path_); }
 } // namespace backup

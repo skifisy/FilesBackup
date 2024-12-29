@@ -29,7 +29,7 @@ size_t BackupHeader::Load(std::ifstream &ifs)
 
 // packfile
 // header+meta+data+footer
-void BackUpImpl::BackupBatch(
+Status BackUpImpl::BackupBatch(
     const BackupConfig &config,
     const std::vector<std::string> &src_path)
 {
@@ -37,6 +37,7 @@ void BackUpImpl::BackupBatch(
         (Path(config.target_dir) / Path(config.backup_name)).ToString();
     // 1. 打包文件
     FileTree filetree;
+    // TODO: 这里有问题，gui传过来的时候应该传入src和dest
     for (const std::string &path : src_path) {
         filetree.PackFileAdd(path, "", false);
     }
@@ -70,15 +71,87 @@ void BackUpImpl::BackupBatch(
         enc.AES_encrypt_file(config.password);
     }
     // 4. 删除临时文件
+    RemoveFile(std::move(pack_path));
+    RemoveFile(std::move(compress_path));
+
+    return {OK, ""};
 }
 
-std::vector<std::shared_ptr<FileNode>>
-BackUpImpl::GetFileList(const std::string &backup_path)
+std::tuple<Status, std::shared_ptr<FileNode>> BackUpImpl::GetFileList(
+    const std::string &backup_path,
+    const std::string &password)
 {
+    std::string pack_path;
     FileTree tree;
+    try {
+        pack_path = RecoverToPackFile(backup_path, password);
+        std::ifstream ifs(pack_path);
+        tree.Load(ifs);
+        RemoveFile(pack_path);
+    } catch (const Status &status) {
+        if (!pack_path.empty()) { RemoveFile(pack_path); }
+        return {status, nullptr};
+    }
+    return std::make_tuple(Status{OK, ""}, tree.GetRootNode());
+}
+
+std::tuple<Status, bool> BackUpImpl::isEncrypted(const std::string &backup_path)
+{
     std::ifstream ifs(backup_path, std::ios::binary);
-    return std::vector<std::shared_ptr<FileNode>>();
+    if (!ifs.is_open()) {
+        return {{NOT_EXIST, "文件" + backup_path + "不存在"}, false};
+    }
+    BackupHeader header;
+    header.Load(ifs);
+    if (strncmp(header.magic, "BUK", 3) != 0) {
+        return {{FORMAT_ERROR, backup_path + "不是打包文件"}, false};
+    }
+
+    return {{OK, ""}, header.is_encrypt};
 }
 
 void BackUpImpl::RestoreBatch() {}
+std::string BackUpImpl::RecoverToPackFile(
+    const std::string &backup_path,
+    const std::string &password)
+{
+    std::ifstream ifs(backup_path, std::ios::binary);
+    if (!ifs.is_open()) {
+        throw Status{NOT_EXIST, "文件" + backup_path + "不存在"};
+    }
+    BackupHeader header;
+    header.Load(ifs);
+    if (strncmp("BUK", header.magic, 3) != 0) {
+        throw Status{
+            FORMAT_ERROR,
+            "文件" + backup_path + "不是备份文件，请选择正确的文件"};
+    }
+    if (password.empty() && header.is_encrypt) {
+        throw Status{ENCRYPTED, "密码不能为空"};
+    }
+
+    if (password.empty()) {
+        std::string uncompress_path = backup_path + "_uncompress_temp";
+        std::ofstream ofs(uncompress_path, std::ios::binary);
+        Compress comp(ifs, ofs);
+        comp.DecompressFile();
+        return uncompress_path;
+    } else {
+        std::string decrypted_path = backup_path + "_decrypted_temp";
+        std::ofstream ofs(decrypted_path, std::ios::binary);
+        Encrypt enc(ifs, ofs);
+        ofs.close();
+        bool dec_ret = enc.AES_decrypt_file(password);
+        if (!dec_ret) {
+            RemoveFile(decrypted_path);
+            throw Status{PASSWORD_ERROR, "密码错误"};
+        }
+        std::string uncompress_path = backup_path + "_uncompress_temp";
+        std::ifstream decrypted_file_ifs(decrypted_path, std::ios::binary);
+        std::ofstream uncompress_file_ofs(uncompress_path, std::ios::binary);
+        Compress comp(decrypted_file_ifs, uncompress_file_ofs);
+        comp.DecompressFile();
+        return uncompress_path;
+    }
+}
 } // namespace backup

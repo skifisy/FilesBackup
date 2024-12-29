@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "backup.h"
-
 namespace backup {
 
 class BackUpImpl : public BackUp
@@ -17,7 +16,7 @@ class BackUpImpl : public BackUp
      * @param src_path 需要打包的文件数组
      * @param target_path 打包文件的目的地址
      */
-    void BackupBatch(
+    Status BackupBatch(
         const BackupConfig &config,
         const std::vector<std::string> &src_path);
 
@@ -25,8 +24,11 @@ class BackUpImpl : public BackUp
      * @brief 根据打包文件，获取文件list
      * @param backup_path 打包文件的路径
      */
-    std::vector<std::shared_ptr<FileNode>>
-    GetFileList(const std::string &backup_path);
+    std::tuple<Status, std::shared_ptr<FileNode>> GetFileList(
+        const std::string &backup_path,
+        const std::string &password = "");  // 这里可以不用带有默认参数？
+
+    std::tuple<Status, bool> isEncrypted(const std::string &backup_path);
 
     /**
      * @brief
@@ -35,5 +37,14 @@ class BackUpImpl : public BackUp
 
     BackUpImpl() = default;
     ~BackUpImpl() = default;
+
+  private:
+    // 备份文件->解密->解压缩
+    /**
+     * @return 解密&解压后的文件路径
+     */
+    std::string RecoverToPackFile(
+        const std::string &backup_path,
+        const std::string &password = "");
 };
 } // namespace backup

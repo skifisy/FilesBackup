@@ -68,6 +68,9 @@ class Path
     std::vector<std::string> SplitPath() const;
 
   private:
+    friend bool RemoveFile(const Path &path) noexcept;
+    friend bool RemoveAll(const Path &path);
+
     Path(const fs::path &p);
     Path(fs::path &&p) noexcept;
     fs::path path_;
@@ -101,5 +104,9 @@ bool Link(const std::string &to, const std::string &from);
 bool SymLink(const std::string &to, const std::string &from);
 
 bool MakeFifo(const std::string &filename, mode_t mode);
+
+bool RemoveFile(const Path &path) noexcept;
+
+bool RemoveAll(const Path &path);
 
 } // namespace backup
