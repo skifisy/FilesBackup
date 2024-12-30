@@ -26,6 +26,7 @@ enum backup_error_code : int
     PASSWORD_ERROR,  // 密码错误
     EMPTY_FILENAME,  // 文件名为空
     EMPTY_FILEPATH,  // 文件路径为空
+    
 };
 
 // 错误类型

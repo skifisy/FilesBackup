@@ -5,6 +5,8 @@
 #include "ui_backupconfigdialog.h"
 #include "input_dialog.h"
 
+
+
 BackupConfigDialog::BackupConfigDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::BackupConfigDialog)
@@ -52,7 +54,7 @@ void BackupConfigDialog::on_startButton_clicked()
     // packfiles
     QSharedPointer<BackupConfig> config(new BackupConfig);
     config->backPath = ui->backupFileDirectoryLineEdit->text();
-    config->filename = ui->backupFilenameLineEdit->text();
+    config->filename = ui->backupFilenameLineEdit->text()+".bak";
     config->isEncrypt = ui->passwordCheckBox->isChecked();
     if (config->isEncrypt) { config->password = ui->passwordLineEdit->text(); }
 

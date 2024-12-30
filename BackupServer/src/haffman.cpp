@@ -8,7 +8,7 @@
 //
 #include <cassert>
 #include <iostream>
-
+#include "error_code.h"
 #include "file_meta.h"
 #include "haffman.h"
 namespace backup {
@@ -27,6 +27,7 @@ void Haffman::deleteNode(Node *node)
 void Haffman::CountFreq(std::ifstream &ifs)
 {
     char buffer[BUFFER_SIZE];
+    if (!ifs.is_open()) { throw Status{NOT_EXIST, "压缩文件的源文件不存在"}; }
     while (!ifs.eof()) {
         int len = ifs.read(buffer, BUFFER_SIZE).gcount();
         for (int i = 0; i < len; i++) {
@@ -299,6 +300,5 @@ size_t Haffman::LoadBitSet(std::bitset<256> &set, int len, std::ifstream &ifs)
     if (ret < (256 / 8)) { set <<= (256 / 8 - ret) * 8; }
     return ret;
 }
-
 
 } // namespace backup

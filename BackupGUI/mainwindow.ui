@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>790</width>
-    <height>660</height>
+    <height>673</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -217,216 +217,170 @@
        <attribute name="title">
         <string>恢复</string>
        </attribute>
-       <widget class="QGroupBox" name="localGroupBox">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>10</y>
-          <width>741</width>
-          <height>381</height>
-         </rect>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <property name="spacing">
+         <number>20</number>
         </property>
-        <property name="title">
-         <string/>
-        </property>
-        <property name="flat">
-         <bool>false</bool>
-        </property>
-        <property name="checkable">
-         <bool>false</bool>
-        </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
-        <widget class="QLabel" name="label_12">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>10</y>
-           <width>71</width>
-           <height>31</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>本地文件</string>
-         </property>
-        </widget>
-        <widget class="QLineEdit" name="localFileRestoreLineEdit">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="geometry">
-          <rect>
-           <x>101</x>
-           <y>10</y>
-           <width>531</width>
-           <height>31</height>
-          </rect>
-         </property>
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-         <property name="placeholderText">
-          <string>请选择打包文件</string>
-         </property>
-        </widget>
-        <widget class="QToolButton" name="browseLocalFile">
-         <property name="geometry">
-          <rect>
-           <x>650</x>
-           <y>10</y>
-           <width>81</width>
-           <height>31</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>选择文件</string>
-         </property>
-        </widget>
-        <widget class="QTreeWidget" name="packFileList">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>50</y>
-           <width>711</width>
-           <height>321</height>
-          </rect>
-         </property>
-         <property name="focusPolicy">
-          <enum>Qt::StrongFocus</enum>
-         </property>
-         <property name="contextMenuPolicy">
-          <enum>Qt::CustomContextMenu</enum>
-         </property>
-         <property name="acceptDrops">
-          <bool>true</bool>
-         </property>
-         <column>
-          <property name="text">
-           <string>文件名</string>
+        <item>
+         <widget class="QGroupBox" name="localGroupBox">
+          <property name="title">
+           <string/>
           </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>大小</string>
+          <property name="flat">
+           <bool>false</bool>
           </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>类型</string>
+          <property name="checkable">
+           <bool>false</bool>
           </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>权限</string>
+          <property name="checked">
+           <bool>false</bool>
           </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>修改时间</string>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <property name="spacing">
+            <number>15</number>
+           </property>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <property name="spacing">
+              <number>25</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="label_12">
+               <property name="text">
+                <string>本地文件</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="localFileRestoreLineEdit">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+               <property name="placeholderText">
+                <string>请选择打包文件</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="browseLocalFile">
+               <property name="text">
+                <string>选择文件</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QTreeWidget" name="packFileList">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::StrongFocus</enum>
+             </property>
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
+             </property>
+             <property name="acceptDrops">
+              <bool>true</bool>
+             </property>
+             <column>
+              <property name="text">
+               <string>文件名</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>大小</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>类型</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>权限</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>修改时间</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>所有者</string>
+              </property>
+             </column>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <property name="spacing">
+           <number>20</number>
           </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>所有者</string>
-          </property>
-         </column>
-        </widget>
-       </widget>
-       <widget class="QToolButton" name="browseRestoreDirectoryButton">
-        <property name="geometry">
-         <rect>
-          <x>670</x>
-          <y>410</y>
-          <width>81</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>选择目录</string>
-        </property>
-       </widget>
-       <widget class="QCheckBox" name="passwordCheckBox">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="geometry">
-         <rect>
-          <x>40</x>
-          <y>460</y>
-          <width>51</width>
-          <height>19</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>密码</string>
-        </property>
-        <property name="checkable">
-         <bool>false</bool>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="backupFileRestoreDirectoryLineEdit">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="geometry">
-         <rect>
-          <x>100</x>
-          <y>410</y>
-          <width>561</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="placeholderText">
-         <string>请选择恢复到的目录</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_15">
-        <property name="geometry">
-         <rect>
-          <x>40</x>
-          <y>410</y>
-          <width>51</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>恢复到</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="passwordLineEdit">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="geometry">
-         <rect>
-          <x>100</x>
-          <y>460</y>
-          <width>561</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="startRestoreButton">
-        <property name="geometry">
-         <rect>
-          <x>300</x>
-          <y>510</y>
-          <width>131</width>
-          <height>61</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>开始恢复</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normaloff>:/icons/icons/start.png</normaloff>:/icons/icons/start.png</iconset>
-        </property>
-       </widget>
+          <item>
+           <widget class="QLabel" name="label_15">
+            <property name="text">
+             <string>恢复到</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="backupFileRestoreDirectoryLineEdit">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="placeholderText">
+             <string>请选择恢复到的目录</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="browseRestoreDirectoryButton">
+            <property name="text">
+             <string>选择目录</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <widget class="QPushButton" name="startRestoreButton">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>40</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>150</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>开始恢复</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normaloff>:/icons/icons/start.png</normaloff>:/icons/icons/start.png</iconset>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </widget>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
