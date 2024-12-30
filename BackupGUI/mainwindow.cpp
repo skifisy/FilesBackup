@@ -8,9 +8,14 @@
 #include <QTimer>
 #include <QAction>
 #include <QScreen>
-#include "backupconfigdialog.h"
 #include <QFileDialog>
 #include <QLineEdit>
+#include "backupconfigdialog.h"
+#include "backup_impl.h"
+#include "message.h"
+#include "input_dialog.h"
+#include "util.h"
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -121,9 +126,23 @@ void MainWindow::on_backupFiles(QSharedPointer<BackupConfig> config)
     qDebug() << config->backPath << "  " << config->filename;
     // TODO: backupLogic
     QList<QTreeWidgetItem *> filelist = getCheckedItems();
+    std::vector<std::pair<std::string, std::string>> list;
     for (QTreeWidgetItem *item : filelist) {
-        qDebug() << item->text(0) << " " << item->text(1) << " "
-                 << item->text(2) << item->data(0, Qt::UserRole).toString();
+        list.emplace_back(
+            item->text(2).toStdString(),
+            item->data(0, Qt::UserRole).toString().toStdString());
+    }
+    backup::BackUp *back = new backup::BackUpImpl();
+    backup::BackupConfig backupConfig{
+        config->filename.toStdString(),
+        config->backPath.toStdString(),
+        config->isEncrypt,
+        config->password.toStdString()};
+    backup::Status s = back->BackupBatch(backupConfig, list);
+    if (s.code == backup::OK) {
+        Message::info(this, "文件备份成功！");
+    } else {
+        Message::warning(this, s.msg.c_str());
     }
 }
 
@@ -222,12 +241,69 @@ void MainWindow::getCheckedItems(
     }
 }
 
+QTreeWidgetItem *MainWindow::generateOneRecoverItem(
+    const QString &filename,
+    const QString &size,
+    const QString &filetype,
+    const QString &permission,
+    const QString &mod_time,
+    const QString &owner)
+{
+    QTreeWidgetItem *item = new QTreeWidgetItem();
+    item->setText(static_cast<int>(RecoverEnum::FILE_NAME), filename);
+    item->setText(static_cast<int>(RecoverEnum::SIZE), size);
+    item->setText(static_cast<int>(RecoverEnum::FILE_TYPE), filetype);
+    item->setText(static_cast<int>(RecoverEnum::PERMISSION), permission);
+    item->setText(static_cast<int>(RecoverEnum::MOD_TIME), mod_time);
+    item->setText(static_cast<int>(RecoverEnum::OWNER), owner);
+    return item;
+}
+
 void MainWindow::on_browseLocalFile_clicked()
 {
+    auto tree = ui->packFileList;
+    tree->clear();
     QString filePath = QFileDialog::getOpenFileName(
         this, "选择打包文件", "", "所有文件 (*);;打包文件 (*.bak)");
     qDebug() << filePath;
+    backup::BackUp *back = new backup::BackUpImpl();
+    auto [status, is_encryt] = back->isEncrypted(filePath.toStdString());
+    QString password;
+    ui->passwordCheckBox->setChecked(false);
+    if (status.code == backup::OK && is_encryt) {
+        ui->passwordCheckBox->setChecked(true);
+        while (true) {
+            auto [ok, pass] = InputDialog::getText(this, "请输入密码：");
+            if (!ok) return;
+            if (pass.isEmpty()) { Message::warning(this, "密码不能为空！"); }
+            password = std::move(pass);
+            break;
+        }
+    } else if (status.code != backup::OK) {
+        Message::warning(this, status.msg.c_str());
+        return;
+    }
     ui->localFileRestoreLineEdit->setText(filePath);
+    auto [s, rootnode] =
+        back->GetFileList(filePath.toStdString(), password.toStdString());
+    if (s.code != backup::OK) {
+        Message::warning(this, s.msg.c_str());
+        return;
+    }
+    // 构建filetree
+    // 1. 添加第一层
+    for (auto &[filename, node] : rootnode->children_) {
+        auto& meta = node->meta_;
+        QTreeWidgetItem* item = generateOneRecoverItem(
+            filename.c_str(),
+            FormatFileSize(meta.size),
+            getTypeTag(static_cast<backup::FileType>(meta.type)),
+            FormatPermission(meta.permissions, static_cast<backup::FileType>(meta.type)),
+            FormatTime(meta.mod_time),
+            backup::UidToString(meta.uid).c_str()
+        );
+        tree->addTopLevelItem(item);
+    }
 }
 
 void MainWindow::on_browseRestoreDirectoryButton_clicked()

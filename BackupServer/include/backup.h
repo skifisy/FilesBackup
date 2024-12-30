@@ -42,10 +42,18 @@ class BackUp
         const BackupConfig &config,
         const std::vector<std::string> &src_path) = 0;
 
+    virtual Status BackupBatch(
+        const BackupConfig &config,
+        const std::vector<std::pair<std::string, std::string>> &src_path) = 0;
+
     virtual void RestoreBatch() = 0;
+
     virtual std::tuple<Status, std::shared_ptr<FileNode>> GetFileList(
         const std::string &backup_path,
         const std::string &password = "") = 0;
+
+    virtual std::tuple<Status, bool>
+    isEncrypted(const std::string &backup_path) = 0;
 
     BackUp() = default;
     virtual ~BackUp() = default;

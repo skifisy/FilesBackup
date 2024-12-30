@@ -24,6 +24,8 @@ set(PROJECT_SOURCES
         mydialog.h mydialog.cpp mydialog.ui
         backupconfigdialog.h backupconfigdialog.cpp backupconfigdialog.ui
         fileexplore.h fileexplore.cpp
+        message.h input_dialog.h 
+        util.h util.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

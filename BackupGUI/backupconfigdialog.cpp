@@ -1,8 +1,9 @@
 #include <QDebug>
 #include <QFileDialog>
-
+#include "message.h"
 #include "backupconfigdialog.h"
 #include "ui_backupconfigdialog.h"
+#include "input_dialog.h"
 
 BackupConfigDialog::BackupConfigDialog(QWidget *parent)
     : QDialog(parent)
@@ -48,14 +49,27 @@ void BackupConfigDialog::on_cancelButton_clicked() { this->hide(); }
 
 void BackupConfigDialog::on_startButton_clicked()
 {
-    // validate
-
     // packfiles
     QSharedPointer<BackupConfig> config(new BackupConfig);
     config->backPath = ui->backupFileDirectoryLineEdit->text();
     config->filename = ui->backupFilenameLineEdit->text();
     config->isEncrypt = ui->passwordCheckBox->isChecked();
     if (config->isEncrypt) { config->password = ui->passwordLineEdit->text(); }
+
+    // validate
+    if(config->filename.isEmpty()) {
+        Message::warning(this, "备份文件名不能为空！");
+        return;
+    }
+    if(config->backPath.isEmpty()) {
+        Message::warning(this, "备份路径不能为空！");
+        return;
+
+    }
+    if(config->isEncrypt && config->password.isEmpty()) {
+        Message::warning(this, "文件密码不能为空!");
+        return;
+    }
     // 获取选中的time check按钮
     QAbstractButton *selectedButton = buttonGroup->checkedButton();
     config->timetype =

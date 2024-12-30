@@ -13,6 +13,17 @@ class MainWindow;
 }
 QT_END_NAMESPACE
 
+// 文件恢复时，文件树的列名
+enum struct RecoverEnum
+{
+    FILE_NAME = 0,
+    SIZE,
+    FILE_TYPE,
+    PERMISSION,
+    MOD_TIME,
+    OWNER
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -42,6 +53,7 @@ class MainWindow : public QMainWindow
     QString getTypeTag(backup::FileType type);
     QString getTypeTag(const QString &file_path);
 
+    // 文件备份创建item
     void generateTreeItem(const backup::Path &dir, QTreeWidgetItem *parent);
     QTreeWidgetItem *generateOneTreeItem(
         const QString &filename,
@@ -50,6 +62,16 @@ class MainWindow : public QMainWindow
         const QString &pack_path);
     QList<QTreeWidgetItem *> getCheckedItems();
     void getCheckedItems(QList<QTreeWidgetItem *> &list, QTreeWidgetItem *root);
+
+    // 文件恢复创建item
+    QTreeWidgetItem* generateOneRecoverItem(
+      const QString & filename,
+      const QString & size,
+      const QString & filetype,
+      const QString & permission,
+      const QString & mod_time,
+      const QString & owner
+    );
     Ui::MainWindow *ui;
     // QString: 文件的绝对路径
     // 只存储top_level（后面level不考虑）

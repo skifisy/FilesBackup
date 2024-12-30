@@ -33,6 +33,16 @@ Status BackUpImpl::BackupBatch(
     const BackupConfig &config,
     const std::vector<std::string> &src_path)
 {
+    // validate
+    if (config.backup_name.empty()) {
+        return Status(EMPTY_FILENAME, "备份文件名为空");
+    }
+    if (config.is_encrypt && config.password.empty()) {
+        return Status(PASSWORD_ERROR, "密码为空");
+    }
+    if (config.target_dir.empty()) {
+        return Status(EMPTY_FILEPATH, "打包路径为空");
+    }
     std::string target_path =
         (Path(config.target_dir) / Path(config.backup_name)).ToString();
     // 1. 打包文件
@@ -79,9 +89,61 @@ Status BackUpImpl::BackupBatch(
 
 Status BackUpImpl::BackupBatch(
     const BackupConfig &config,
-    const std::vector<std::pair<std::string, std::string>> &src_path) {
-       return {OK, ""}; 
+    const std::vector<std::pair<std::string, std::string>> &src_path)
+{
+    // validate
+    if (config.backup_name.empty()) {
+        return Status(EMPTY_FILENAME, "备份文件名为空");
     }
+    if (config.is_encrypt && config.password.empty()) {
+        return Status(PASSWORD_ERROR, "密码为空");
+    }
+    if (config.target_dir.empty()) {
+        return Status(EMPTY_FILEPATH, "打包路径为空");
+    }
+    std::string target_path =
+        (Path(config.target_dir) / Path(config.backup_name)).ToString();
+    // 1. 打包文件
+    FileTree filetree;
+    // TODO: 这里有问题，gui传过来的时候应该传入src和dest
+    for (const auto &[src, dest] : src_path) {
+        filetree.PackFileAdd(src, dest, false);
+    }
+    std::string pack_path = target_path + "_pack_temp";
+    std::ofstream packfile_ofs(pack_path, std::ios::binary);
+    filetree.FullDump(packfile_ofs);
+    packfile_ofs.flush();
+
+    // 往backup file写入header信息
+    std::ofstream target_file_ofs(target_path, std::ios::binary);
+    BackupHeader header;
+    header.is_encrypt = config.is_encrypt;
+    header.Dump(target_file_ofs);
+
+    // 2. 压缩文件
+    std::ifstream packfile_ifs(pack_path, std::ios::binary);
+    std::string compress_path(target_path + "_compress_temp");
+    std::ofstream compress_file_ofs;
+    if (config.is_encrypt) {
+        compress_file_ofs.open(compress_path, std::ios::binary);
+    } else {
+        compress_file_ofs = std::move(target_file_ofs);
+    }
+    Compress compress(packfile_ifs, compress_file_ofs);
+    compress.CompressFile();
+    compress_file_ofs.flush();
+    // 3. 加密文件
+    if (config.is_encrypt) {
+        std::ifstream compress_file_ifs(compress_path, std::ios::binary);
+        Encrypt enc(compress_file_ifs, target_file_ofs);
+        enc.AES_encrypt_file(config.password);
+    }
+    // 4. 删除临时文件
+    RemoveFile(std::move(pack_path));
+    RemoveFile(std::move(compress_path));
+
+    return {OK, ""};
+}
 
 std::tuple<Status, std::shared_ptr<FileNode>> BackUpImpl::GetFileList(
     const std::string &backup_path,
@@ -117,6 +179,15 @@ std::tuple<Status, bool> BackUpImpl::isEncrypted(const std::string &backup_path)
 }
 
 void BackUpImpl::RestoreBatch() {}
+
+Status BackUpImpl::RestoreBatch(
+    std::string backup_path,
+    std::vector<std::string> pack_paths,
+    std::string target_dir)
+{
+    return Status();
+}
+
 std::string BackUpImpl::RecoverToPackFile(
     const std::string &backup_path,
     const std::string &password)

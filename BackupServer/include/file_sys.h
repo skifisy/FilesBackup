@@ -109,4 +109,6 @@ bool RemoveFile(const Path &path) noexcept;
 
 bool RemoveAll(const Path &path);
 
+std::string UidToString(uid_t uid);
+
 } // namespace backup

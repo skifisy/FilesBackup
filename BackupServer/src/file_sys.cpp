@@ -4,6 +4,7 @@
 #include <sys/stat.h> // For stat, chmod
 #include <unistd.h>   // For read, write, link
 #include <utime.h>    // For utime
+#include <pwd.h>      // getpwuid
 
 #include <cassert>
 #include <cstring>
@@ -238,4 +239,14 @@ bool MakeFifo(const std::string &filename, mode_t mode)
 bool RemoveFile(const Path &path) noexcept { return fs::remove(path.path_); }
 
 bool RemoveAll(const Path &path) { return fs::remove_all(path.path_); }
+
+std::string UidToString(uid_t uid)
+{
+    struct passwd *pw = getpwuid(uid); // 根据 uid 获取用户信息
+    if (pw) {
+        return std::string(pw->pw_name); // 获取用户名并返回
+    } else {
+        return "Unknown User"; // 如果找不到对应的用户，返回默认值
+    }
+}
 } // namespace backup

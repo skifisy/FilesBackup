@@ -7,3 +7,5 @@ testfiles
 testdir
 a.out
 t.cc
+*.user
+*.autosave

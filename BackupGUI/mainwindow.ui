@@ -29,7 +29,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <property name="iconSize">
        <size>
@@ -283,7 +283,7 @@
           <string>选择文件</string>
          </property>
         </widget>
-        <widget class="QTreeWidget" name="localFileList">
+        <widget class="QTreeWidget" name="packFileList">
          <property name="enabled">
           <bool>true</bool>
          </property>
@@ -309,6 +309,31 @@
            <string>文件名</string>
           </property>
          </column>
+         <column>
+          <property name="text">
+           <string>大小</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>类型</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>权限</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>修改时间</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>所有者</string>
+          </property>
+         </column>
         </widget>
        </widget>
        <widget class="QToolButton" name="browseRestoreDirectoryButton">
@@ -325,6 +350,9 @@
         </property>
        </widget>
        <widget class="QCheckBox" name="passwordCheckBox">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="geometry">
          <rect>
           <x>40</x>
@@ -335,6 +363,9 @@
         </property>
         <property name="text">
          <string>密码</string>
+        </property>
+        <property name="checkable">
+         <bool>false</bool>
         </property>
        </widget>
        <widget class="QLineEdit" name="backupFileRestoreDirectoryLineEdit">
