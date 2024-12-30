@@ -65,11 +65,9 @@ void MainWindow::on_addDirectoryButton_clicked()
     if (!folderPath.isEmpty() && !files_to_pack.contains(folderPath)) {
         files_to_pack.insert(folderPath);
         QFileInfo fileInfo(folderPath);
-        QTreeWidgetItem *rootItem = new QTreeWidgetItem(ui->backupFileList);
-        rootItem->setText(0, fileInfo.fileName());
-        rootItem->setText(1, getTypeTag(folderPath));
-        rootItem->setText(2, folderPath);
-        rootItem->setCheckState(0, Qt::Checked);
+        QTreeWidgetItem *rootItem = generateOneTreeItem(
+            fileInfo.fileName(), getTypeTag(folderPath), folderPath, "");
+        ui->backupFileList->addTopLevelItem(rootItem);
         generateTreeItem(folderPath.toStdString(), rootItem);
     }
 }
@@ -88,12 +86,14 @@ void MainWindow::on_addFileButton_clicked()
             if (!files_to_pack.contains(file)) {
                 files_to_pack.insert(file);
                 QFileInfo fileInfo(file);
-                QTreeWidgetItem *rootItem =
-                    new QTreeWidgetItem(ui->backupFileList);
-                rootItem->setText(0, fileInfo.fileName());
-                rootItem->setText(2, file);
-                rootItem->setCheckState(0, Qt::Checked);
-                rootItem->setText(1, getTypeTag(file));
+
+                QTreeWidgetItem *rootItem = generateOneTreeItem(
+                    fileInfo.fileName(),
+                    getTypeTag(file),
+                    file,
+                    "" // 顶层的pack_path为""
+                );
+                ui->backupFileList->addTopLevelItem(rootItem);
             } else {
                 statusBar()->showMessage("文件" + file + "已存在", 5000);
             }
@@ -120,7 +120,11 @@ void MainWindow::on_backupFiles(QSharedPointer<BackupConfig> config)
 {
     qDebug() << config->backPath << "  " << config->filename;
     // TODO: backupLogic
-    //
+    QList<QTreeWidgetItem *> filelist = getCheckedItems();
+    for (QTreeWidgetItem *item : filelist) {
+        qDebug() << item->text(0) << " " << item->text(1) << " "
+                 << item->text(2) << item->data(0, Qt::UserRole).toString();
+    }
 }
 
 QString MainWindow::getTypeTag(backup::FileType type)
@@ -156,15 +160,65 @@ void MainWindow::generateTreeItem(
     const backup::Path &dir,
     QTreeWidgetItem *parent)
 {
+    QString pack_path_parent = parent->data(0, Qt::UserRole).toString();
+    QString pack_path;
+    if (pack_path_parent.isEmpty()) {
+        pack_path = parent->text(0);
+    } else {
+        pack_path = pack_path_parent + "/" + parent->text(0);
+    }
     for (backup::Path &file : backup::GetFilesFromDir(dir)) {
-        QTreeWidgetItem *item = new QTreeWidgetItem(parent);
-        item->setText(0, file.ToString().c_str());
         backup::Path fullPath = (dir / file).ToString().c_str();
         backup::FileType type = fullPath.GetFileType();
-        item->setText(1, getTypeTag(type));            // type
-        item->setText(2, fullPath.ToString().c_str()); // fullpath
-        item->setCheckState(0, Qt::Checked);
+
+        QTreeWidgetItem *item = generateOneTreeItem(
+            file.ToString().c_str(),
+            getTypeTag(type),
+            fullPath.ToString().c_str(),
+            pack_path);
+        parent->addChild(item);
         if (type == backup::FileType::DIR) { generateTreeItem(fullPath, item); }
+    }
+}
+
+QTreeWidgetItem *MainWindow::generateOneTreeItem(
+    const QString &filename,
+    const QString &typetag,
+    const QString &fullpath,
+    const QString &pack_path)
+{
+    QTreeWidgetItem *item = new QTreeWidgetItem();
+    item->setText(0, filename);
+    item->setText(1, typetag);
+    item->setText(2, fullpath);
+    item->setCheckState(0, Qt::Checked);
+    item->setData(0, Qt::UserRole, pack_path);
+    return item;
+}
+
+QList<QTreeWidgetItem *> MainWindow::getCheckedItems()
+{
+    QList<QTreeWidgetItem *> list;
+    // 1. 遍历所有顶级项
+    for (int i = 0; i < ui->backupFileList->topLevelItemCount(); i++) {
+        auto item = ui->backupFileList->topLevelItem(i);
+        if (item->checkState(0) == Qt::Checked) { list.append(item); }
+        // 2. 递归添加子项
+        getCheckedItems(list, item);
+    }
+    return list;
+}
+
+void MainWindow::getCheckedItems(
+    QList<QTreeWidgetItem *> &list,
+    QTreeWidgetItem *root)
+{
+    // 1. 遍历root的所有子项
+    for (int i = 0; i < root->childCount(); i++) {
+        auto child = root->child(i);
+        if (child->checkState(0) == Qt::Checked) { list.append(child); }
+        // 2. 递归遍历
+        getCheckedItems(list, child);
     }
 }
 

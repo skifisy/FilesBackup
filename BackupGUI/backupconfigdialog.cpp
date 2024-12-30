@@ -56,7 +56,7 @@ void BackupConfigDialog::on_startButton_clicked()
     config->filename = ui->backupFilenameLineEdit->text();
     config->isEncrypt = ui->passwordCheckBox->isChecked();
     if (config->isEncrypt) { config->password = ui->passwordLineEdit->text(); }
-    // 获取选中的按钮
+    // 获取选中的time check按钮
     QAbstractButton *selectedButton = buttonGroup->checkedButton();
     config->timetype =
         static_cast<RegularTimeType>(buttonGroup->id(selectedButton));

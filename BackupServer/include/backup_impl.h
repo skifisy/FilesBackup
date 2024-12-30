@@ -14,11 +14,19 @@ class BackUpImpl : public BackUp
      * @brief 批量打包文件
      * @param config 打包配置
      * @param src_path 需要打包的文件数组
-     * @param target_path 打包文件的目的地址
      */
     Status BackupBatch(
         const BackupConfig &config,
         const std::vector<std::string> &src_path);
+
+    /**
+     * @brief 批量打包文件
+     * @param config 打包配置
+     * @param src_path <文件源路径, 打包目标路径>
+     */
+    Status BackupBatch(
+        const BackupConfig &config,
+        const std::vector<std::pair<std::string, std::string>> &src_path);
 
     /**
      * @brief 根据打包文件，获取文件list

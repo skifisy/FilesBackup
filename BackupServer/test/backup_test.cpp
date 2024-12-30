@@ -38,7 +38,6 @@ TEST_F(BackupTestFixture, BackupBatch)
     EXPECT_TRUE(node.contains("dir"));
     EXPECT_TRUE(node.contains("f1"));
     EXPECT_TRUE(node.contains("f2"));
-
 }
 
 // TEST_F(MyClassTestFixture, SubtractFunction) {

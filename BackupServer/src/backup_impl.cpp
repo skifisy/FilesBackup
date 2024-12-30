@@ -77,6 +77,12 @@ Status BackUpImpl::BackupBatch(
     return {OK, ""};
 }
 
+Status BackUpImpl::BackupBatch(
+    const BackupConfig &config,
+    const std::vector<std::pair<std::string, std::string>> &src_path) {
+       return {OK, ""}; 
+    }
+
 std::tuple<Status, std::shared_ptr<FileNode>> BackUpImpl::GetFileList(
     const std::string &backup_path,
     const std::string &password)
