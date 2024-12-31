@@ -177,6 +177,9 @@ std::tuple<Status, std::shared_ptr<FileNode>> BackUpImpl::GetFileList(
     try {
         pack_path = RecoverToPackFile(backup_path, password);
         std::ifstream ifs(pack_path);
+        if (!ifs.is_open()) {
+            throw Status{NOT_EXIST, "无法打开文件" + pack_path};
+        }
         tree.Load(ifs);
         RemoveFile(pack_path);
     } catch (const Status &status) {
@@ -204,12 +207,31 @@ std::tuple<Status, bool> BackUpImpl::isEncrypted(const std::string &backup_path)
 void BackUpImpl::RestoreBatch() {}
 
 Status BackUpImpl::RestoreBatch(
-    std::string backup_path,
-    std::vector<std::string> pack_paths,
-    std::string target_dir)
+    const std::string &backup_path,
+    const std::vector<std::string> &pack_paths,
+    const std::string &target_dir,
+    const std::string &password)
 {
-    
-    return Status();
+    // TODO：在ui侧还需要添加一个data，存储打包路径
+
+    // 对于filetree：target就是target_dir/pack_path (再回到上一级？)
+    // 或者再创建一个filetree的接口，->>必须的，因为不能递归恢复
+    FilesCleaner cleaner;
+    try {
+        std::string uncompress_path = RecoverToPackFile(backup_path, password);
+        cleaner.AddFile(uncompress_path);
+        std::ifstream ifs(uncompress_path, std::ios::binary);
+        if (!ifs.is_open()) {
+            throw Status{NOT_EXIST, "无法恢复解压/解密备份文件"};
+        }
+        FileTree tree;
+        tree.Load(ifs);
+        // tree.Recover();
+
+    } catch (const Status &s) {
+        return s;
+    }
+    return Status{OK, ""};
 }
 
 std::string BackUpImpl::RecoverToPackFile(
@@ -230,29 +252,35 @@ std::string BackUpImpl::RecoverToPackFile(
     if (password.empty() && header.is_encrypt) {
         throw Status{ENCRYPTED, "密码不能为空"};
     }
-
+    FilesCleaner cleaner;
     if (password.empty()) {
         std::string uncompress_path = backup_path + "_uncompress_temp";
         std::ofstream ofs(uncompress_path, std::ios::binary);
+        if (!ofs.is_open()) {
+            throw Status{NO_PERMISSION, "无法创建文件" + uncompress_path};
+        }
         Compress comp(ifs, ofs);
         comp.DecompressFile();
         return uncompress_path;
     } else {
         std::string decrypted_path = backup_path + "_decrypted_temp";
         std::ofstream ofs(decrypted_path, std::ios::binary);
+        if (!ofs.is_open()) {
+            throw Status{NO_PERMISSION, "无法创建文件" + decrypted_path};
+        }
         Encrypt enc(ifs, ofs);
         bool dec_ret = enc.AES_decrypt_file(password);
         ofs.close();
-        if (!dec_ret) {
-            RemoveFile(decrypted_path);
-            throw Status{PASSWORD_ERROR, "密码错误"};
-        }
+        cleaner.AddFile(decrypted_path);
+        if (!dec_ret) { throw Status{PASSWORD_ERROR, "密码错误"}; }
         std::string uncompress_path = backup_path + "_uncompress_temp";
         std::ifstream decrypted_file_ifs(decrypted_path, std::ios::binary);
         std::ofstream uncompress_file_ofs(uncompress_path, std::ios::binary);
+        if (!uncompress_file_ofs.is_open()) {
+            throw Status{NO_PERMISSION, "无法创建文件" + uncompress_path};
+        }
         Compress comp(decrypted_file_ifs, uncompress_file_ofs);
         comp.DecompressFile();
-        RemoveFile(decrypted_path);
         return uncompress_path;
     }
 }

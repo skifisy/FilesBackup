@@ -70,10 +70,22 @@ class FileTree
      *        不要求文件流指针的位置
      * @param target_path 恢复到的目的路径，必须是文件夹，不存在则创建
      */
-    void Recover(
+    void RecoverRecursive(
         const std::string &pack_path,
         std::ifstream &ifs,
         const std::string &target_path);
+
+    /**
+     * @brief 可以保持pack_path的结构恢复
+     * @param pack_path 打包路径
+     * @param ifs 文件流
+     * @param target_path 恢复到的位置
+     */
+    void Recover(
+        const std::string* pack_path,
+        std::ifstream& ifs,
+        const std::string& target_path
+    );
 
     /**
      * @brief 返回tree的根节点

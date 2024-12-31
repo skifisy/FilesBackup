@@ -34,7 +34,7 @@ class BackUpImpl : public BackUp
      */
     std::tuple<Status, std::shared_ptr<FileNode>> GetFileList(
         const std::string &backup_path,
-        const std::string &password = "");  // 这里可以不用带有默认参数？
+        const std::string &password = ""); // 这里可以不用带有默认参数？
 
     std::tuple<Status, bool> isEncrypted(const std::string &backup_path);
 
@@ -48,12 +48,13 @@ class BackUpImpl : public BackUp
      * @param backup_path 备份文件的路径
      * @param pack_paths 需要恢复的文件路径（相对于打包文件来说）
      * @param target_dir 恢复到的目标目录
+     * @param password 如果文件被加密，需要填写
      */
     Status RestoreBatch(
-      std::string backup_path,
-      std::vector<std::string> pack_paths,
-      std::string target_dir
-    );
+        const std::string &backup_path,
+        const std::vector<std::string> &pack_paths,
+        const std::string &target_dir,
+        const std::string &password = "");
 
     BackUpImpl() = default;
     ~BackUpImpl() = default;

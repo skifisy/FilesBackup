@@ -53,7 +53,7 @@ void FileTree::Load(std::ifstream &ifs)
     }
 }
 
-void FileTree::Recover(
+void FileTree::RecoverRecursive(
     const std::string &pack_path,
     std::ifstream &ifs,
     const std::string &target_path)

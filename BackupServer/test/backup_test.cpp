@@ -83,4 +83,3 @@ TEST_F(BackupTestFixture, BackupBatchEncrypted)
     EXPECT_TRUE(node1.contains("f1"));
     EXPECT_TRUE(node1.contains("f2"));
 }
-

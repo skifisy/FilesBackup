@@ -37,11 +37,21 @@ MainWindow::MainWindow(QWidget *parent)
     ui->packFileList->setColumnWidth(0, 250);
     ui->packFileList->setSelectionMode(QAbstractItemView::ExtendedSelection);
     backupDialog = new BackupConfigDialog(this);
+    QIcon icon(":/images/static/folder.png"); // 请替换为你自己的图标路径
+    ui->packPathLineEdit->setStyleSheet(
+        "QLineEdit { padding-left: 5px; }"); // 给文本框添加内边距以便给图标留空间
+    ui->packPathLineEdit->addAction(
+        icon, QLineEdit::LeadingPosition); // 在左侧添加图标
     connect(
         backupDialog,
         &BackupConfigDialog::backupFile,
         this,
         &MainWindow::on_backupFiles);
+    connect(
+        ui->packFileList,
+        &QTreeWidget::itemDoubleClicked,
+        this,
+        &MainWindow::onItemDoubleClicked);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -175,6 +185,22 @@ QString MainWindow::GetTypeTag(const QString &file_path)
     return GetTypeTag(type);
 }
 
+QString MainWindow::GetFileIcon(backup::FileType type)
+{
+    switch (type) {
+    case backup::FileType::REG:
+        return ":/images/static/file.png";
+    case backup::FileType::DIR:
+        return ":/images/static/folder.png";
+    case backup::FileType::FLNK:
+        return ":/images/static/link.png";
+    case backup::FileType::FIFO:
+        return ":/images/static/pipeline.png";
+    default:
+        return "";
+    }
+}
+
 void MainWindow::generateTreeItem(
     const backup::Path &dir,
     QTreeWidgetItem *parent)
@@ -244,19 +270,22 @@ void MainWindow::getCheckedItems(
 QTreeWidgetItem *MainWindow::generateOneRecoverItem(
     const QString &filename,
     const QString &size,
-    const QString &filetype,
+    backup::FileType filetype,
     const QString &permission,
     const QString &mod_time,
-    const QString &owner)
+    const QString &owner,
+    bool setCheckState)
 {
     QTreeWidgetItem *item = new QTreeWidgetItem();
     item->setText(static_cast<int>(RecoverEnum::FILE_NAME), filename);
     item->setText(static_cast<int>(RecoverEnum::SIZE), size);
-    item->setText(static_cast<int>(RecoverEnum::FILE_TYPE), filetype);
+    item->setText(
+        static_cast<int>(RecoverEnum::FILE_TYPE), GetTypeTag(filetype));
     item->setText(static_cast<int>(RecoverEnum::PERMISSION), permission);
     item->setText(static_cast<int>(RecoverEnum::MOD_TIME), mod_time);
     item->setText(static_cast<int>(RecoverEnum::OWNER), owner);
-    item->setCheckState(0, Qt::Checked);
+    if (setCheckState) item->setCheckState(0, Qt::Checked);
+    item->setIcon(0, QIcon(GetFileIcon(filetype)));
     return item;
 }
 
@@ -266,6 +295,8 @@ void MainWindow::on_browseLocalFile_clicked()
     tree->clear();
     ui->localFileRestoreLineEdit->clear();
     password.clear();
+    cur_path.clear();
+    ui->packPathLineEdit->clear();
     QString filePath = QFileDialog::getOpenFileName(
         this, "选择备份文件", "", "备份文件 (*.bak);;所有文件 (*)");
     if (filePath.isEmpty()) return;
@@ -299,15 +330,15 @@ void MainWindow::on_browseLocalFile_clicked()
         QTreeWidgetItem *item = generateOneRecoverItem(
             filename.c_str(),
             FormatFileSize(meta.size),
-            GetTypeTag(static_cast<backup::FileType>(meta.type)),
+            static_cast<backup::FileType>(meta.type),
             FormatPermission(
                 meta.permissions, static_cast<backup::FileType>(meta.type)),
             FormatTime(meta.mod_time),
             backup::UidToString(meta.uid).c_str());
         tree->addTopLevelItem(item);
-        // 2. 递归添加
-        generateRecoverTreeItem(node, item);
     }
+    ui->packPathLineEdit->setText(CurPathToString());
+    recover_tree = rootnode;
 }
 
 void MainWindow::on_browseRestoreDirectoryButton_clicked()
@@ -324,6 +355,56 @@ void MainWindow::on_browseRestoreDirectoryButton_clicked()
     }
 }
 
+// std::shared_ptr<backup::FileNode> LocateFileNode(
+//     const QList<QString> &path,
+//     std::shared_ptr<backup::FileNode> tree)
+// {
+//     for (auto &filename : path) {
+//         tree = tree->children_[filename.toStdString()];
+//     }
+//     return tree;
+// }
+
+void MainWindow::onItemDoubleClicked(QTreeWidgetItem *item, int column)
+{
+    const QString &filetype =
+        item->text(static_cast<int>(RecoverEnum::FILE_TYPE));
+    if (filetype != GetTypeTag(backup::FileType::DIR)) { return; }
+    const QString &filename =
+        item->text(static_cast<int>(RecoverEnum::FILE_NAME));
+    if (filename == "..") {
+        cur_path.pop_back();
+    } else {
+        cur_path.append(filename);
+    }
+    auto filenode = recover_tree;
+    for (auto &filename : cur_path) {
+        filenode = filenode->children_[filename.toStdString()];
+    }
+    auto treewidget = ui->packFileList;
+    treewidget->clear();
+    if (!cur_path.empty()) {
+        // 先添加一个`..`文件夹
+        auto item = generateOneRecoverItem(
+            "..", "", backup::FileType::DIR, "", "", "", false);
+        treewidget->addTopLevelItem(item);
+    }
+    // 添加当级treenode下的文件
+    for (auto &[filename, node] : filenode->children_) {
+        auto &meta = node->meta_;
+        QTreeWidgetItem *item = generateOneRecoverItem(
+            filename.c_str(),
+            FormatFileSize(meta.size),
+            static_cast<backup::FileType>(meta.type),
+            FormatPermission(
+                meta.permissions, static_cast<backup::FileType>(meta.type)),
+            FormatTime(meta.mod_time),
+            backup::UidToString(meta.uid).c_str());
+        treewidget->addTopLevelItem(item);
+    }
+    ui->packPathLineEdit->setText(CurPathToString());
+}
+
 void MainWindow::generateRecoverTreeItem(
     std::shared_ptr<backup::FileNode> root,
     QTreeWidgetItem *parent)
@@ -333,7 +414,7 @@ void MainWindow::generateRecoverTreeItem(
         QTreeWidgetItem *item = generateOneRecoverItem(
             filename.c_str(),
             FormatFileSize(meta.size),
-            GetTypeTag(static_cast<backup::FileType>(meta.type)),
+            static_cast<backup::FileType>(meta.type),
             FormatPermission(
                 meta.permissions, static_cast<backup::FileType>(meta.type)),
             FormatTime(meta.mod_time),
@@ -341,4 +422,15 @@ void MainWindow::generateRecoverTreeItem(
         parent->addChild(item);
         generateRecoverTreeItem(node, item);
     }
+}
+
+QString MainWindow::CurPathToString()
+{
+    QString s = "/";
+    for (int i = 0; i < cur_path.size() - 1; i++) {
+        s += cur_path[i];
+        s += '/';
+    }
+    if (!cur_path.empty()) { s += cur_path.back(); }
+    return s;
 }

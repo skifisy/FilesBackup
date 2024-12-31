@@ -48,11 +48,15 @@ class MainWindow : public QMainWindow
     void on_browseLocalFile_clicked();
 
     void on_browseRestoreDirectoryButton_clicked();
+    // 设计双击进入界面
+    void onItemDoubleClicked(QTreeWidgetItem *item, int column);
 
   private:
     /// 获取文件类型
     QString GetTypeTag(backup::FileType type);
     QString GetTypeTag(const QString &file_path);
+    /// 获取文件图标
+    QString GetFileIcon(backup::FileType type);
 
     // 文件备份创建item
     void generateTreeItem(const backup::Path &dir, QTreeWidgetItem *parent);
@@ -61,18 +65,23 @@ class MainWindow : public QMainWindow
         const QString &typetag,
         const QString &fullpath,
         const QString &pack_path);
-    QList<QTreeWidgetItem *> getCheckedItems(QTreeWidget* tree);
+    QList<QTreeWidgetItem *> getCheckedItems(QTreeWidget *tree);
     void getCheckedItems(QList<QTreeWidgetItem *> &list, QTreeWidgetItem *root);
 
     // 文件恢复创建item
     QTreeWidgetItem *generateOneRecoverItem(
         const QString &filename,
         const QString &size,
-        const QString &filetype,
+        backup::FileType filetype,
         const QString &permission,
         const QString &mod_time,
-        const QString &owner);
-    void generateRecoverTreeItem(std::shared_ptr<backup::FileNode> root, QTreeWidgetItem* parent);
+        const QString &owner,
+        bool setCheckState = true);
+    void generateRecoverTreeItem(
+        std::shared_ptr<backup::FileNode> root,
+        QTreeWidgetItem *parent);
+
+    QString CurPathToString();
     Ui::MainWindow *ui;
     // QString: 文件的绝对路径
     // 只存储top_level（后面level不考虑）
@@ -81,5 +90,7 @@ class MainWindow : public QMainWindow
     // 打包文件恢复时，首次输入密码后暂存
     QString password;
     bool is_encrypted;
+    QList<QString> cur_path;
+    std::shared_ptr<backup::FileNode> recover_tree;
 };
 #endif // MAINWINDOW_H

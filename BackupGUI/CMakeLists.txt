@@ -17,7 +17,8 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 # 添加包含目录 (头文件所在目录)
 include_directories(${PROJECT_SOURCE_DIR}/../BackupServer/include)
 message(${PROJECT_SOURCE_DIR}/../BackupServer/include)
-
+# 添加资源文件
+qt_add_resources(RESOURCES resource.qrc)
 set(PROJECT_SOURCES
         main.cpp
         mainwindow.cpp mainwindow.h mainwindow.ui
@@ -26,6 +27,7 @@ set(PROJECT_SOURCES
         fileexplore.h fileexplore.cpp
         message.h input_dialog.h 
         util.h util.cpp
+        ${RESOURCES}
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
