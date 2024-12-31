@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <string>
 #include <vector>
+#include "error_code.h"
 
 namespace backup {
 struct FileMetadata;
@@ -110,5 +111,23 @@ bool RemoveFile(const Path &path) noexcept;
 bool RemoveAll(const Path &path);
 
 std::string UidToString(uid_t uid);
+
+enum Permission
+{
+    EXIST = 0,
+    EXECUTE = 1,
+    WRITE = 2,
+    READ = 4
+};
+
+/**
+ * @brief 检查文件的访问权限
+ *        如果文件不存在，则返回NOT_EXIST
+ *        所以，如果想要在文件创建前，就判断能否写文件，那么检查所在目录的写权限
+ * @param path 需要检查的文件路径
+ * @param permission 需要检查的文件权限
+ * @return 返回OK/NOT_EXIST/NO_PERMISSION
+ */
+ErrorCode Access(const std::string &path, int permission);
 
 } // namespace backup

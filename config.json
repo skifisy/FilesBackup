@@ -1,3 +1,4 @@
 {
-    "task_path": "task_list.db"
+    "task_path": "task_list.db",
+    "temp_path": "/tmp/backup"
 }

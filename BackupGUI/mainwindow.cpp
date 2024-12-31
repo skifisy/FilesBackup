@@ -355,16 +355,6 @@ void MainWindow::on_browseRestoreDirectoryButton_clicked()
     }
 }
 
-// std::shared_ptr<backup::FileNode> LocateFileNode(
-//     const QList<QString> &path,
-//     std::shared_ptr<backup::FileNode> tree)
-// {
-//     for (auto &filename : path) {
-//         tree = tree->children_[filename.toStdString()];
-//     }
-//     return tree;
-// }
-
 void MainWindow::onItemDoubleClicked(QTreeWidgetItem *item, int column)
 {
     const QString &filetype =
@@ -433,4 +423,49 @@ QString MainWindow::CurPathToString()
     }
     if (!cur_path.empty()) { s += cur_path.back(); }
     return s;
+}
+
+void MainWindow::on_startRestoreButton_clicked()
+{
+    QList<QTreeWidgetItem *> checked_items = getCheckedItems(ui->packFileList);
+    QString cur_path = CurPathToString();
+    QString backup_path = ui->localFileRestoreLineEdit->text();
+    QString target_path = ui->backupFileRestoreDirectoryLineEdit->text();
+    // validate
+    if (backup_path.isEmpty()) {
+        Message::warning(this, "还没有选择备份文件");
+        return;
+    }
+    if (checked_items.empty()) {
+        Message::info(this, "没有要恢复的文件");
+        return;
+    }
+
+    if (target_path.isEmpty()) {
+        Message::warning(this, "还没有选择恢复的目标目录");
+        return;
+    }
+    if (cur_path.isEmpty()) {
+        Message::warning(this, "未知错误");
+        return;
+    }
+    backup::BackUp *back = new backup::BackUpImpl();
+    // 转换checkedpath
+    std::vector<std::string> paths;
+    for (auto item : checked_items) {
+        QString pack_path =
+            cur_path + "/" +
+            item->text(static_cast<int>(RecoverEnum::FILE_NAME));
+        paths.emplace_back();
+    }
+    backup::Status s = back->RestoreBatch(
+        backup_path.toStdString(),
+        paths,
+        target_path.toStdString(),
+        password.toStdString());
+    if (s.code == backup::OK) {
+        Message::info(this, "备份文件恢复成功");
+    } else {
+        Message::warning(this, s.msg.c_str());
+    }
 }

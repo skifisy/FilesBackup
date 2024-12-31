@@ -1,25 +1,14 @@
 #include "schedule_task.h"
 #include <iostream>
 #include <fstream>
-#include <nlohmann/json.hpp>
 #include "file_meta.h"
-using json = nlohmann::json;
-
+#include "config.h"
 namespace backup {
 TaskScheduler::TaskScheduler()
 {
-    // 读取文件
-    std::ifstream file("config.json");
-    if (file.is_open()) {
-        // 解析JSON
-        json jsonData;
-        file >> jsonData;
-        if (jsonData.contains("task_path")) {
-            task_path = jsonData["task_path"];
-        } else {
-            task_path = "task_list.db"; // 给一个默认的path
-        }
-    }
+    // 获取配置
+    Config* config = Config::getInstance();
+    task_path = config->getConfigData("task_path");
     std::ifstream taskfile(task_path, std::ios::binary);
     if (taskfile.is_open()) Load(taskfile);
 }

@@ -28,6 +28,9 @@ TEST(PathTest, SplitPath)
     std::vector<std::string> path_list = {"hello", "world"};
     EXPECT_EQ(p.SplitPath(), path_list);
 
+    // 处理绝对路径
+    p = "/hello/world";
+    EXPECT_EQ(p.SplitPath(), path_list);
     p = "hello";
     path_list = {"hello"};
     EXPECT_EQ(p.SplitPath(), path_list);

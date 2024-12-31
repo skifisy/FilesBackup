@@ -44,6 +44,8 @@ std::error_code backup_make_error_code(int e)
 
 std::error_code backup_make_error_code(backup_error_code e)
 {
+    if (e < backup_error_code::EEOF)
+        return std::error_code(e, std::system_category());
     return std::error_code(
         static_cast<int>(e), singleton_bigant_error_category());
 }

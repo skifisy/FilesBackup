@@ -39,11 +39,6 @@ class BackUpImpl : public BackUp
     std::tuple<Status, bool> isEncrypted(const std::string &backup_path);
 
     /**
-     * @brief
-     */
-    void RestoreBatch();
-
-    /**
      * @brief 将打包文件中的部分文件批量恢复到某个文件夹中
      * @param backup_path 备份文件的路径
      * @param pack_paths 需要恢复的文件路径（相对于打包文件来说）
@@ -56,7 +51,7 @@ class BackUpImpl : public BackUp
         const std::string &target_dir,
         const std::string &password = "");
 
-    BackUpImpl() = default;
+    BackUpImpl();
     ~BackUpImpl() = default;
 
   private:
@@ -67,5 +62,9 @@ class BackUpImpl : public BackUp
     std::string RecoverToPackFile(
         const std::string &backup_path,
         const std::string &password = "");
+    
+    void CheckFilePermission(const std::string& path, int permissions);
+    
+    std::string temp_path;
 };
 } // namespace backup

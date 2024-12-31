@@ -50,8 +50,10 @@ class MainWindow : public QMainWindow
     void on_browseRestoreDirectoryButton_clicked();
     // 设计双击进入界面
     void onItemDoubleClicked(QTreeWidgetItem *item, int column);
+    // 开始恢复文件
+    void on_startRestoreButton_clicked();
 
-  private:
+private:
     /// 获取文件类型
     QString GetTypeTag(backup::FileType type);
     QString GetTypeTag(const QString &file_path);

@@ -113,6 +113,7 @@ std::vector<std::string> Path::SplitPath() const
     std::string p = ToString();
     if (p.empty()) return {};
     std::size_t start = 0, end;
+    if (*p.begin() == '/') start++;
     std::vector<std::string> str_list;
     while ((end = p.find('/', start)) != std::string::npos) {
         str_list.emplace_back(p.substr(start, end - start));
@@ -182,18 +183,20 @@ bool SaveFileMetaData(const FileMetadata &meta, const std::string &target)
         std::cerr << "Can not modify time of " << target << std::endl;
         return false;
     }
-    // 修改权限
-    // 软链接文件没有权限
-    if (meta.type != static_cast<uint8_t>(FileType::FLNK) &&
-        chmod(target.c_str(), meta.permissions) != 0) {
-        std::cerr << "Can not modify permission of " << target << std::endl;
-        ret = false;
-    }
 
     // 修改拥有者/组
     if (lchown(target.c_str(), meta.uid, meta.gid) != 0) {
         std::cerr << "Can not modify user id or group id of " << target
                   << std::endl;
+        ret = false;
+    }
+
+    // 修改权限
+    // 权限要最后修改！
+    // 软链接文件没有权限
+    if (meta.type != static_cast<uint8_t>(FileType::FLNK) &&
+        chmod(target.c_str(), meta.permissions) != 0) {
+        std::cerr << "Can not modify permission of " << target << std::endl;
         ret = false;
     }
 
@@ -203,7 +206,7 @@ bool SaveFileMetaData(const FileMetadata &meta, const std::string &target)
 bool MakeDir(const std::string &dirname, mode_t mode)
 {
     bool ret = mkdir(dirname.c_str(), mode) == 0;
-    if (!ret) { std::cerr << "无法创建文件夹'" << dirname << "'" << std::endl; }
+    if (!ret && errno == EEXIST) { ret = true; }
     return ret;
 }
 
@@ -247,6 +250,23 @@ std::string UidToString(uid_t uid)
         return std::string(pw->pw_name); // 获取用户名并返回
     } else {
         return "Unknown User"; // 如果找不到对应的用户，返回默认值
+    }
+}
+
+ErrorCode Access(const std::string &path, int permission)
+{
+    auto ret = access(path.c_str(), permission);
+    if (ret == 0) {
+        return OK;
+    } else {
+        switch (errno) {
+        case ENOENT:
+            return NOT_EXIST;
+        case EACCES:
+            return NO_PERMISSION;
+        default:
+            return ERROR;
+        }
     }
 }
 } // namespace backup

@@ -354,8 +354,8 @@
           </item>
           <item>
            <widget class="QLineEdit" name="backupFileRestoreDirectoryLineEdit">
-            <property name="enabled">
-             <bool>false</bool>
+            <property name="readOnly">
+             <bool>true</bool>
             </property>
             <property name="placeholderText">
              <string>请选择恢复到的目录</string>

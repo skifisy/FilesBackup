@@ -3,6 +3,7 @@
 #include "compress.h"
 #include "encrypt.h"
 #include "cstring"
+#include "config.h"
 namespace backup {
 class FilesCleaner
 {
@@ -204,18 +205,12 @@ std::tuple<Status, bool> BackUpImpl::isEncrypted(const std::string &backup_path)
     return {{OK, ""}, header.is_encrypt};
 }
 
-void BackUpImpl::RestoreBatch() {}
-
 Status BackUpImpl::RestoreBatch(
     const std::string &backup_path,
     const std::vector<std::string> &pack_paths,
     const std::string &target_dir,
     const std::string &password)
 {
-    // TODO：在ui侧还需要添加一个data，存储打包路径
-
-    // 对于filetree：target就是target_dir/pack_path (再回到上一级？)
-    // 或者再创建一个filetree的接口，->>必须的，因为不能递归恢复
     FilesCleaner cleaner;
     try {
         std::string uncompress_path = RecoverToPackFile(backup_path, password);
@@ -226,7 +221,9 @@ Status BackUpImpl::RestoreBatch(
         }
         FileTree tree;
         tree.Load(ifs);
-        // tree.Recover();
+        for (const std::string &path : pack_paths) {
+            tree.Recover(path, ifs, target_dir);
+        }
 
     } catch (const Status &s) {
         return s;
@@ -234,14 +231,21 @@ Status BackUpImpl::RestoreBatch(
     return Status{OK, ""};
 }
 
+BackUpImpl::BackUpImpl()
+{
+    Config *config = Config::getInstance();
+    temp_path = config->getConfigData("temp_path");
+    MakeDir(temp_path, 0777); // 创建临时文件夹（不存在时创建）
+    // 确保访问权限
+    CheckFilePermission(temp_path, READ | WRITE);
+}
+
 std::string BackUpImpl::RecoverToPackFile(
     const std::string &backup_path,
     const std::string &password)
 {
+    CheckFilePermission(backup_path, READ);
     std::ifstream ifs(backup_path, std::ios::binary);
-    if (!ifs.is_open()) {
-        throw Status{NOT_EXIST, "文件" + backup_path + "不存在"};
-    }
     BackupHeader header;
     header.Load(ifs);
     if (strncmp("BUK", header.magic, 3) != 0) {
@@ -253,8 +257,9 @@ std::string BackUpImpl::RecoverToPackFile(
         throw Status{ENCRYPTED, "密码不能为空"};
     }
     FilesCleaner cleaner;
+    std::string temp_prefix = temp_path + '/' + Path(backup_path).FileName();
     if (password.empty()) {
-        std::string uncompress_path = backup_path + "_uncompress_temp";
+        std::string uncompress_path = temp_prefix + "_uncompress_temp";
         std::ofstream ofs(uncompress_path, std::ios::binary);
         if (!ofs.is_open()) {
             throw Status{NO_PERMISSION, "无法创建文件" + uncompress_path};
@@ -263,7 +268,7 @@ std::string BackUpImpl::RecoverToPackFile(
         comp.DecompressFile();
         return uncompress_path;
     } else {
-        std::string decrypted_path = backup_path + "_decrypted_temp";
+        std::string decrypted_path = temp_prefix + "_decrypted_temp";
         std::ofstream ofs(decrypted_path, std::ios::binary);
         if (!ofs.is_open()) {
             throw Status{NO_PERMISSION, "无法创建文件" + decrypted_path};
@@ -273,7 +278,7 @@ std::string BackUpImpl::RecoverToPackFile(
         ofs.close();
         cleaner.AddFile(decrypted_path);
         if (!dec_ret) { throw Status{PASSWORD_ERROR, "密码错误"}; }
-        std::string uncompress_path = backup_path + "_uncompress_temp";
+        std::string uncompress_path = temp_prefix + "_uncompress_temp";
         std::ifstream decrypted_file_ifs(decrypted_path, std::ios::binary);
         std::ofstream uncompress_file_ofs(uncompress_path, std::ios::binary);
         if (!uncompress_file_ofs.is_open()) {
@@ -282,6 +287,20 @@ std::string BackUpImpl::RecoverToPackFile(
         Compress comp(decrypted_file_ifs, uncompress_file_ofs);
         comp.DecompressFile();
         return uncompress_path;
+    }
+}
+
+void BackUpImpl::CheckFilePermission(const std::string &path, int permissions)
+{
+    ErrorCode ret = Access(path, permissions);
+    if (ret != OK) {
+        if (ret == NOT_EXIST) {
+            throw Status{NOT_EXIST, "文件/文件夹" + path + "不存在"};
+
+        } else if (ret == NO_PERMISSION) {
+            throw Status{
+                NO_PERMISSION, "没有对文件/文件夹" + path + "的访问权限"};
+        }
     }
 }
 } // namespace backup

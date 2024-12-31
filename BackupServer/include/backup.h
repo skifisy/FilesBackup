@@ -46,7 +46,18 @@ class BackUp
         const BackupConfig &config,
         const std::vector<std::pair<std::string, std::string>> &src_path) = 0;
 
-    virtual void RestoreBatch() = 0;
+    /**
+     * @brief 将打包文件中的部分文件批量恢复到某个文件夹中
+     * @param backup_path 备份文件的路径
+     * @param pack_paths 需要恢复的文件路径（相对于打包文件来说）
+     * @param target_dir 恢复到的目标目录
+     * @param password 如果文件被加密，需要填写
+     */
+    virtual Status RestoreBatch(
+        const std::string &backup_path,
+        const std::vector<std::string> &pack_paths,
+        const std::string &target_dir,
+        const std::string &password = "") = 0;
 
     virtual std::tuple<Status, std::shared_ptr<FileNode>> GetFileList(
         const std::string &backup_path,

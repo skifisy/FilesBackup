@@ -217,7 +217,7 @@ TEST(FileTreeTest, FileTreeDump)
     EXPECT_EQ(tree2.count_, 1);
     CompareHeader(tree.header_, tree2.header_);
     CompareNode(tree.root_->children_["f1"], tree2.root_->children_["f1"]);
-    tree2.RecoverRecursive("", ifs, "for_recover");
+    tree2.Recover("", ifs, "for_recover");
     EXPECT_EQ(::system("cmp f1 for_recover/f1"), 0);
     ifs.close();
     EXPECT_EQ(::system("rm -rf f1"), 0);
@@ -252,7 +252,7 @@ TEST(FileTreeTest, FileTreeDump2)
     CompareNode(dir1->children_["f2"], dir2->children_["f2"]);
     CompareNode(dir1->children_["share"], dir2->children_["share"]);
     CompareNode(dir1->children_["f3"], dir2->children_["f3"]);
-    tree2.RecoverRecursive("", ifs, "for_recover");
+    tree2.Recover("", ifs, "for_recover");
     ifs.close();
     EXPECT_EQ(::system("cmp dir/f1 for_recover/dir/f1"), 0);
     EXPECT_EQ(::system("cmp dir/f2 for_recover/dir/f2"), 0);
@@ -277,7 +277,7 @@ TEST(FileTreeTest, BigFilePackTest)
     std::ifstream ifs("packfile", std::ios::binary);
     FileTree tree2;
     tree2.Load(ifs);
-    tree2.RecoverRecursive("test.jpg", ifs, "recover");
+    tree2.Recover("test.jpg", ifs, "recover");
     ifs.close();
     EXPECT_EQ(::system("cmp test.jpg recover/test.jpg"), 0);
     EXPECT_EQ(::system("rm -rf recover packfile"), 0);
