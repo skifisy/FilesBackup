@@ -62,17 +62,14 @@ void FileTree::Recover(
     if (node == nullptr) {
         throw Status{NOT_EXIST, "备份文件中不存在" + pack_path};
     }
-    if (MakeDir(target_path, 0777)) {
-        if (node == root_) {
-            // TODO: 创建文件夹
-            for (auto [filename, filenode] : node->children_) {
-                Recover(filenode, ifs, target_path + '/' + filename);
-            }
-        } else {
-            Recover(node, ifs, target_path + '/' + node->meta_.name);
+    MakeDir(target_path, 0777);
+    if (node == root_) {
+        // TODO: 创建文件夹
+        for (auto [filename, filenode] : node->children_) {
+            Recover(filenode, ifs, target_path + '/' + filename);
         }
     } else {
-        throw Status{errno, backup_make_error_code(errno).message()};
+        Recover(node, ifs, target_path + '/' + node->meta_.name);
     }
 }
 

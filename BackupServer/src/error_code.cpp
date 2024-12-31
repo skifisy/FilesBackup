@@ -9,6 +9,7 @@
 
 #include "error_code.h"
 #include <netdb.h>
+#include <cstring>
 
 namespace backup {
 
@@ -18,6 +19,7 @@ const char *backup_error_category::name() const noexcept
 }
 std::string backup_error_category::message(int ev) const
 {
+    if (ev < backup_error_code::EEOF) { return strerror(ev); }
     switch (static_cast<backup_error_code>(ev)) {
     case backup_error_code::OK:
         return "Success";
@@ -44,8 +46,6 @@ std::error_code backup_make_error_code(int e)
 
 std::error_code backup_make_error_code(backup_error_code e)
 {
-    if (e < backup_error_code::EEOF)
-        return std::error_code(e, std::system_category());
     return std::error_code(
         static_cast<int>(e), singleton_bigant_error_category());
 }

@@ -120,7 +120,7 @@ void FileMetadata::SetFromPath(const Path &src, const std::string &dest)
     struct stat st
     {};
     if (lstat(src.ToString().c_str(), &st) != 0) {
-        throw std::runtime_error("not find file " + src.ToString());
+        throw Status{NOT_EXIST, "找不到文件 \"" + src.ToString() + '\"'};
     }
     if (dest.empty()) {
         pack_path = src.FileName();

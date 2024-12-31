@@ -185,10 +185,14 @@ bool SaveFileMetaData(const FileMetadata &meta, const std::string &target)
     }
 
     // 修改拥有者/组
-    if (lchown(target.c_str(), meta.uid, meta.gid) != 0) {
-        std::cerr << "Can not modify user id or group id of " << target
-                  << std::endl;
-        ret = false;
+    // root用户才能修改uid
+    if(getuid() == 0 ) {
+        if (lchown(target.c_str(), meta.uid, meta.gid) != 0) {
+            // throw Status{errno, "无法修改文件" + target + "的用户组信息; " + strerror(errno)};
+            std::cerr << "Can not modify user id or group id of " << target
+                    << std::endl;
+            ret = false;
+        }
     }
 
     // 修改权限
@@ -203,40 +207,50 @@ bool SaveFileMetaData(const FileMetadata &meta, const std::string &target)
     return ret;
 }
 
-bool MakeDir(const std::string &dirname, mode_t mode)
+void MakeDir(const std::string &dirname, mode_t mode)
 {
     bool ret = mkdir(dirname.c_str(), mode) == 0;
-    if (!ret && errno == EEXIST) { ret = true; }
-    return ret;
+    if (!ret) {
+        if (errno == EEXIST) {
+            ret = true;
+        } else {
+            throw Status{
+                errno, "无法创建文件夹" + dirname + "; " + strerror(errno)};
+        }
+    }
 }
 
-bool Link(const std::string &to, const std::string &from)
+void Link(const std::string &to, const std::string &from)
 {
     bool ret = link(to.c_str(), from.c_str()) == 0;
     if (!ret) {
-        std::cerr << "无法将文件'" << from << "' 硬链接到文件 '" << to << "'"
-                  << std::endl;
+        throw Status{
+            errno,
+            "无法将文件'" + from + "' 硬链接到文件 '" + to + "'; " +
+                backup_make_error_code(errno).message()};
     }
-    return ret;
 }
 
-bool SymLink(const std::string &to, const std::string &from)
+void SymLink(const std::string &to, const std::string &from)
 {
     bool ret = symlink(to.c_str(), from.c_str()) == 0;
     if (!ret) {
-        std::cerr << "无法将文件'" << from << "' 软链接到文件 '" << to << "'"
-                  << std::endl;
+        throw Status{
+            errno,
+            "无法将文件'" + from + "'软链接到文件'" + to + "'; " +
+                backup_make_error_code(errno).message()};
     }
-    return ret;
 }
 
-bool MakeFifo(const std::string &filename, mode_t mode)
+void MakeFifo(const std::string &filename, mode_t mode)
 {
     bool ret = mkfifo(filename.c_str(), mode) == 0;
     if (!ret) {
-        std::cerr << "无法创建管道文件 '" << filename << "'" << std::endl;
+        throw Status{
+            errno,
+            "无法创建管道文件'" + filename + "'; " +
+                backup_make_error_code(errno).message()};
     }
-    return ret;
 }
 
 bool RemoveFile(const Path &path) noexcept { return fs::remove(path.path_); }

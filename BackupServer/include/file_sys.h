@@ -98,13 +98,13 @@ Path GetCurPath();
  */
 bool SaveFileMetaData(const FileMetadata &meta, const std::string &target);
 
-bool MakeDir(const std::string &dirname, mode_t mode);
+void MakeDir(const std::string &dirname, mode_t mode);
 
-bool Link(const std::string &to, const std::string &from);
+void Link(const std::string &to, const std::string &from);
 
-bool SymLink(const std::string &to, const std::string &from);
+void SymLink(const std::string &to, const std::string &from);
 
-bool MakeFifo(const std::string &filename, mode_t mode);
+void MakeFifo(const std::string &filename, mode_t mode);
 
 bool RemoveFile(const Path &path) noexcept;
 

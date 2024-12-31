@@ -33,11 +33,15 @@ MainWindow::MainWindow(QWidget *parent)
         this->move(x, y);
     }
     ui->backupFileList->setColumnWidth(0, 200);
+    ui->backupFileList->setColumnWidth(
+        static_cast<int>(BackupEnum::MOD_TIME), 140);
     ui->backupFileList->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ui->packFileList->setColumnWidth(0, 250);
+    ui->packFileList->setColumnWidth(
+        static_cast<int>(RecoverEnum::MOD_TIME), 140);
     ui->packFileList->setSelectionMode(QAbstractItemView::ExtendedSelection);
     backupDialog = new BackupConfigDialog(this);
-    QIcon icon(":/images/static/folder.png"); // 请替换为你自己的图标路径
+    QIcon icon(":/images/static/folder.png");
     ui->packPathLineEdit->setStyleSheet(
         "QLineEdit { padding-left: 5px; }"); // 给文本框添加内边距以便给图标留空间
     ui->packPathLineEdit->addAction(
@@ -83,7 +87,7 @@ void MainWindow::on_addDirectoryButton_clicked()
         files_to_pack.insert(folderPath);
         QFileInfo fileInfo(folderPath);
         QTreeWidgetItem *rootItem = generateOneTreeItem(
-            fileInfo.fileName(), GetTypeTag(folderPath), folderPath, "");
+            fileInfo.fileName(), backup::FileType::DIR, folderPath, "");
         ui->backupFileList->addTopLevelItem(rootItem);
         generateTreeItem(folderPath.toStdString(), rootItem);
     }
@@ -103,10 +107,10 @@ void MainWindow::on_addFileButton_clicked()
             if (!files_to_pack.contains(file)) {
                 files_to_pack.insert(file);
                 QFileInfo fileInfo(file);
-
+                backup::Path p(file.toStdString());
                 QTreeWidgetItem *rootItem = generateOneTreeItem(
                     fileInfo.fileName(),
-                    GetTypeTag(file),
+                    p.GetFileType(),
                     file,
                     "" // 顶层的pack_path为""
                 );
@@ -178,13 +182,6 @@ QString MainWindow::GetTypeTag(backup::FileType type)
     }
 }
 
-QString MainWindow::GetTypeTag(const QString &file_path)
-{
-    backup::Path path = file_path.toStdString();
-    backup::FileType type = path.GetFileType();
-    return GetTypeTag(type);
-}
-
 QString MainWindow::GetFileIcon(backup::FileType type)
 {
     switch (type) {
@@ -218,7 +215,7 @@ void MainWindow::generateTreeItem(
 
         QTreeWidgetItem *item = generateOneTreeItem(
             file.ToString().c_str(),
-            GetTypeTag(type),
+            type,
             fullPath.ToString().c_str(),
             pack_path);
         parent->addChild(item);
@@ -228,20 +225,36 @@ void MainWindow::generateTreeItem(
 
 QTreeWidgetItem *MainWindow::generateOneTreeItem(
     const QString &filename,
-    const QString &typetag,
+    backup::FileType filetype,
     const QString &fullpath,
     const QString &pack_path)
 {
     QTreeWidgetItem *item = new QTreeWidgetItem();
-    item->setText(0, filename);
-    item->setText(1, typetag);
-    item->setText(2, fullpath);
+    item->setText(static_cast<int>(BackupEnum::FILE_NAME), filename);
+    item->setText(
+        static_cast<int>(BackupEnum::FILE_TYPE), GetTypeTag(filetype));
+    item->setText(static_cast<int>(BackupEnum::FULL_PATH), fullpath);
+    backup::FileMetadata meta;
+    meta.SetFromPath(fullpath.toStdString());
+
+    item->setText(
+        static_cast<int>(BackupEnum::SIZE), FormatFileSize(meta.size));
+    item->setText(
+        static_cast<int>(BackupEnum::PERMISSION),
+        FormatPermission(meta.permissions, filetype));
+    item->setText(
+        static_cast<int>(BackupEnum::MOD_TIME), FormatTime(meta.mod_time));
+    item->setText(
+        static_cast<int>(BackupEnum::OWNER),
+        backup::UidToString(meta.uid).c_str());
     item->setCheckState(0, Qt::Checked);
     item->setData(0, Qt::UserRole, pack_path);
+    item->setIcon(0, QIcon(GetFileIcon(filetype)));
     return item;
 }
 
-QList<QTreeWidgetItem *> MainWindow::getCheckedItems(QTreeWidget *tree)
+QList<QTreeWidgetItem *>
+MainWindow::getCheckedItems(QTreeWidget *tree, bool isRecursive)
 {
     QList<QTreeWidgetItem *> list;
     // 1. 遍历所有顶级项
@@ -249,7 +262,7 @@ QList<QTreeWidgetItem *> MainWindow::getCheckedItems(QTreeWidget *tree)
         auto item = tree->topLevelItem(i);
         if (item->checkState(0) == Qt::Checked) { list.append(item); }
         // 2. 递归添加子项
-        getCheckedItems(list, item);
+        if (isRecursive) getCheckedItems(list, item);
     }
     return list;
 }
@@ -291,15 +304,15 @@ QTreeWidgetItem *MainWindow::generateOneRecoverItem(
 
 void MainWindow::on_browseLocalFile_clicked()
 {
+    QString filePath = QFileDialog::getOpenFileName(
+        this, "选择备份文件", "", "备份文件 (*.bak);;所有文件 (*)");
+    if (filePath.isEmpty()) return;
     auto tree = ui->packFileList;
     tree->clear();
     ui->localFileRestoreLineEdit->clear();
     password.clear();
     cur_path.clear();
     ui->packPathLineEdit->clear();
-    QString filePath = QFileDialog::getOpenFileName(
-        this, "选择备份文件", "", "备份文件 (*.bak);;所有文件 (*)");
-    if (filePath.isEmpty()) return;
     backup::BackUp *back = new backup::BackUpImpl();
     auto [status, is_encryt] = back->isEncrypted(filePath.toStdString());
     if (status.code == backup::OK && is_encryt) {
@@ -427,8 +440,10 @@ QString MainWindow::CurPathToString()
 
 void MainWindow::on_startRestoreButton_clicked()
 {
-    QList<QTreeWidgetItem *> checked_items = getCheckedItems(ui->packFileList);
+    QList<QTreeWidgetItem *> checked_items =
+        getCheckedItems(ui->packFileList, false);
     QString cur_path = CurPathToString();
+    if (cur_path != "/") cur_path += "/";
     QString backup_path = ui->localFileRestoreLineEdit->text();
     QString target_path = ui->backupFileRestoreDirectoryLineEdit->text();
     // validate
@@ -452,11 +467,11 @@ void MainWindow::on_startRestoreButton_clicked()
     backup::BackUp *back = new backup::BackUpImpl();
     // 转换checkedpath
     std::vector<std::string> paths;
+
     for (auto item : checked_items) {
         QString pack_path =
-            cur_path + "/" +
-            item->text(static_cast<int>(RecoverEnum::FILE_NAME));
-        paths.emplace_back();
+            cur_path + item->text(static_cast<int>(RecoverEnum::FILE_NAME));
+        paths.emplace_back(pack_path.toStdString());
     }
     backup::Status s = back->RestoreBatch(
         backup_path.toStdString(),

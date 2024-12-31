@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>790</width>
+    <width>899</width>
     <height>673</height>
    </rect>
   </property>
@@ -29,7 +29,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="iconSize">
        <size>
@@ -73,7 +73,27 @@
           </column>
           <column>
            <property name="text">
+            <string>大小</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
             <string>类型</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>权限</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>修改时间</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>所有者</string>
            </property>
           </column>
           <column>
@@ -404,211 +424,171 @@
        <attribute name="title">
         <string>验证</string>
        </attribute>
-       <widget class="QGroupBox" name="localGroupBox_2">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>10</y>
-          <width>741</width>
-          <height>431</height>
-         </rect>
-        </property>
-        <property name="title">
-         <string/>
-        </property>
-        <property name="flat">
-         <bool>false</bool>
-        </property>
-        <property name="checkable">
-         <bool>false</bool>
-        </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
-        <widget class="QLabel" name="label_13">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>10</y>
-           <width>71</width>
-           <height>31</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>本地文件</string>
-         </property>
-        </widget>
-        <widget class="QLineEdit" name="localFileRestoreLineEdit_2">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="geometry">
-          <rect>
-           <x>101</x>
-           <y>10</y>
-           <width>531</width>
-           <height>31</height>
-          </rect>
-         </property>
-        </widget>
-        <widget class="QToolButton" name="browseLocalFile_2">
-         <property name="geometry">
-          <rect>
-           <x>650</x>
-           <y>10</y>
-           <width>81</width>
-           <height>31</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>选择文件</string>
-         </property>
-        </widget>
-        <widget class="QTreeWidget" name="localFileList_2">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>100</y>
-           <width>711</width>
-           <height>321</height>
-          </rect>
-         </property>
-         <property name="focusPolicy">
-          <enum>Qt::StrongFocus</enum>
-         </property>
-         <property name="contextMenuPolicy">
-          <enum>Qt::CustomContextMenu</enum>
-         </property>
-         <property name="acceptDrops">
-          <bool>true</bool>
-         </property>
-         <column>
-          <property name="text">
-           <string>文件名</string>
+       <layout class="QVBoxLayout" name="verticalLayout_6">
+        <item>
+         <widget class="QGroupBox" name="localGroupBox_2">
+          <property name="title">
+           <string/>
           </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>结果</string>
+          <property name="flat">
+           <bool>false</bool>
           </property>
-         </column>
-        </widget>
-        <widget class="QLabel" name="label_2">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>60</y>
-           <width>71</width>
-           <height>31</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>验证结果</string>
-         </property>
-        </widget>
-       </widget>
+          <property name="checkable">
+           <bool>false</bool>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_5">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_6">
+             <item>
+              <widget class="QLabel" name="label_13">
+               <property name="text">
+                <string>本地文件</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="localFileRestoreLineEdit_2">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="browseLocalFile_2">
+               <property name="text">
+                <string>选择文件</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>验证结果</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QTreeWidget" name="localFileList_2">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::StrongFocus</enum>
+             </property>
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
+             </property>
+             <property name="acceptDrops">
+              <bool>true</bool>
+             </property>
+             <column>
+              <property name="text">
+               <string>文件名</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>结果</string>
+              </property>
+             </column>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
       </widget>
       <widget class="QWidget" name="tab_4">
        <attribute name="title">
         <string>任务</string>
        </attribute>
-       <widget class="QTreeWidget" name="taskList">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>40</y>
-          <width>746</width>
-          <height>481</height>
-         </rect>
-        </property>
-        <property name="contextMenuPolicy">
-         <enum>Qt::CustomContextMenu</enum>
-        </property>
-        <property name="sortingEnabled">
-         <bool>false</bool>
-        </property>
-        <column>
-         <property name="text">
-          <string>文件名</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>下一次备份时间</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>备份频率</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>是否加密</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>本地路径</string>
-         </property>
-        </column>
-       </widget>
-       <widget class="QLabel" name="label_3">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>10</y>
-          <width>101</width>
-          <height>20</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>定时任务列表</string>
-        </property>
-       </widget>
-       <widget class="QToolButton" name="clearTaskButton">
-        <property name="geometry">
-         <rect>
-          <x>684</x>
-          <y>540</y>
-          <width>71</width>
-          <height>26</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>清空</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normaloff>:/icons/icons/clear.png</normaloff>:/icons/icons/clear.png</iconset>
-        </property>
-        <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonTextBesideIcon</enum>
-        </property>
-       </widget>
-       <widget class="QToolButton" name="deleteTaskButton">
-        <property name="geometry">
-         <rect>
-          <x>600</x>
-          <y>540</y>
-          <width>71</width>
-          <height>26</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>删除</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normaloff>:/icons/icons/delete.png</normaloff>:/icons/icons/delete.png</iconset>
-        </property>
-        <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonTextBesideIcon</enum>
-        </property>
-       </widget>
+       <layout class="QVBoxLayout" name="verticalLayout_7">
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>定时任务列表</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTreeWidget" name="taskList">
+          <property name="contextMenuPolicy">
+           <enum>Qt::CustomContextMenu</enum>
+          </property>
+          <property name="sortingEnabled">
+           <bool>false</bool>
+          </property>
+          <column>
+           <property name="text">
+            <string>文件名</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>下一次备份时间</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>备份频率</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>是否加密</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>本地路径</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
+          <property name="spacing">
+           <number>50</number>
+          </property>
+          <item>
+           <widget class="QWidget" name="widget" native="true"/>
+          </item>
+          <item>
+           <widget class="QToolButton" name="deleteTaskButton">
+            <property name="text">
+             <string>删除</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normaloff>:/icons/icons/delete.png</normaloff>:/icons/icons/delete.png</iconset>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="clearTaskButton">
+            <property name="text">
+             <string>清空</string>
+            </property>
+            <property name="icon">
+             <iconset>
+              <normaloff>:/icons/icons/clear.png</normaloff>:/icons/icons/clear.png</iconset>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>

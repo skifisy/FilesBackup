@@ -51,9 +51,19 @@ using ErrorCode = backup_error_code;
 // 对外提供的接口都应该包含 code + msg两者
 struct Status : std::exception
 {
+    Status(int code, const std::string &s)
+        : code(code)
+        , msg(s)
+    {}
+    Status(int code, std::string &&s) noexcept
+        : code(code)
+        , msg(std::move(s))
+    {}
+
+    const char *what() const noexcept override { return msg.c_str(); }
+
     int code;
     std::string msg;
-    const char *what() const noexcept override { return msg.c_str(); }
 };
 
 } // namespace backup
