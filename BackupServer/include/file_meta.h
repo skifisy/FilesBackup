@@ -17,7 +17,7 @@
 #include <string>
 
 #include "file_sys.h"
-
+#include "encrypt.h"
 /**
 
 +----------------------+
@@ -52,6 +52,7 @@ struct BackupFileHeader
     time_t timestamp; // 备份的创建时间戳
     uint8_t backup_type; // 备份类型：0表示全量备份，1表示增量备份
     // uint64_t hash;         // 当前备份的唯一标识
+
     uint64_t metadata_offset;        // 元数据区域的起始偏移量
     uint64_t linkto_metadata_offset; // 链接源文件元数据的起始偏移
     uint64_t file_data_offset;       // 文件内容区域的起始偏移量
@@ -97,7 +98,8 @@ struct FileMetadata
     bool is_linked_to;        // 是否为软链接文件指向的文件
     std::string link_to_path; // 软链接指向的文件路径（原始路径）
     std::string link_to_full_path; // 软链接指向的文件->绝对路径
-    // std::string hash;  // 文件内容的哈希值（用于增量备份时检测修改）
+    char hash
+        [SHA256_SIZE]; // 文件内容的哈希值(用于备份验证)，仅在REGULAR文件时Dump
     uint64_t link_num; // 文件的链接数（硬链接）
     uint64_t ino;      // inode节点号
     uint64_t data_offset = 0; // 文件内容在文件内容区的起始偏移量（如果是文件）
@@ -109,7 +111,8 @@ struct FileMetadata
                + sizeof(type) + sizeof(size) + sizeof(permissions) +
                sizeof(mod_time) + sizeof(access_time) + sizeof(uid) +
                sizeof(gid) + link_to_path.size() + link_to_full_path.size() +
-               sizeof(link_num) + sizeof(ino) + sizeof(data_offset);
+               sizeof(link_num) + sizeof(ino) + sizeof(data_offset) +
+               SHA256_SIZE;
     }
     size_t Dump(std::ofstream &ofs) const;
     size_t Load(std::ifstream &ifs);
@@ -130,6 +133,8 @@ size_t DumpVar(const T &t, std::ofstream &ofs)
 
 size_t DumpVar(bool t, std::ofstream &ofs);
 
+size_t DumpArray(const char *arr, int size, std::ofstream &ofs);
+
 template <typename T>
 size_t LoadVar(T &t, std::ifstream &ifs)
 {
@@ -138,5 +143,7 @@ size_t LoadVar(T &t, std::ifstream &ifs)
 }
 
 size_t LoadVar(bool &t, std::ifstream &ifs);
+
+size_t LoadArray(char *arr, int size, std::ifstream &ifs);
 
 } // namespace backup

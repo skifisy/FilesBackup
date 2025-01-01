@@ -1,6 +1,7 @@
 #include <cstring>
 
 #include "file_meta.h"
+#include <iostream>
 namespace backup {
 
 size_t DumpString(const std::string &str, std::ofstream &ofs)
@@ -26,12 +27,24 @@ size_t DumpVar(bool t, std::ofstream &ofs)
     return DumpVar(b, ofs);
 }
 
+size_t DumpArray(const char *arr, int size, std::ofstream &ofs)
+{
+    ofs.write(arr, size);
+    return size;
+}
+
 size_t LoadVar(bool &t, std::ifstream &ifs)
 {
     uint8_t b;
     size_t ret = LoadVar(b, ifs);
     t = b == 1 ? true : false;
     return ret;
+}
+
+size_t LoadArray(char *arr, int size, std::ifstream &ifs)
+{
+    ifs.read(arr, size);
+    return size;
 }
 
 size_t BackupFileHeader::Dump(std::ofstream &ofs) const
@@ -84,7 +97,8 @@ size_t FileMetadata::Dump(std::ofstream &ofs) const
     ret += DumpVar(is_linked_to, ofs);
     ret += DumpString(link_to_path, ofs);
     ret += DumpString(link_to_full_path, ofs);
-    // DumpString(hash, ofs);
+    // if (type == static_cast<int>(FileType::REG))
+        ret += DumpArray(hash, SHA256_SIZE, ofs);
     ret += DumpVar(link_num, ofs);
     ret += DumpVar(ino, ofs);
     ret += DumpVar(data_offset, ofs);
@@ -108,7 +122,8 @@ size_t FileMetadata::Load(std::ifstream &ifs)
     ret += LoadVar(is_linked_to, ifs);
     ret += LoadString(link_to_path, ifs);
     ret += LoadString(link_to_full_path, ifs);
-    // LoadString(hash, ifs);
+    // if (type == static_cast<int>(FileType::REG))
+        ret += LoadArray(hash, SHA256_SIZE, ifs);
     ret += LoadVar(link_num, ifs);
     ret += LoadVar(ino, ifs);
     ret += LoadVar(data_offset, ifs);

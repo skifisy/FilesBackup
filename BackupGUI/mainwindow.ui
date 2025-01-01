@@ -29,7 +29,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <property name="iconSize">
        <size>
@@ -466,11 +466,28 @@
             </layout>
            </item>
            <item>
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>验证结果</string>
-             </property>
-            </widget>
+            <layout class="QHBoxLayout" name="horizontalLayout_9">
+             <item>
+              <widget class="QLabel" name="label_2">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>验证结果  </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="resultLabel">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
             <widget class="QTreeWidget" name="localFileList_2">
@@ -488,12 +505,12 @@
              </property>
              <column>
               <property name="text">
-               <string>文件名</string>
+               <string>差异类型</string>
               </property>
              </column>
              <column>
               <property name="text">
-               <string>结果</string>
+               <string>详情</string>
               </property>
              </column>
             </widget>

@@ -14,6 +14,7 @@
 #include "file_tree.h"
 namespace backup {
 
+
 struct BackupConfig
 {
     // 打包文件的名字
@@ -24,6 +25,7 @@ struct BackupConfig
     bool is_encrypt;
     // 文件密码
     std::string password;
+
 };
 
 struct BackupHeader

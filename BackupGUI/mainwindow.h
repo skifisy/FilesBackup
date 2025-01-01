@@ -17,13 +17,13 @@ QT_END_NAMESPACE
 // 选择文件时，文件树的列名
 enum class BackupEnum
 {
-  FILE_NAME = 0,
-  SIZE,
-  FILE_TYPE,
-  PERMISSION,
-  MOD_TIME,
-  OWNER,
-  FULL_PATH
+    FILE_NAME = 0,
+    SIZE,
+    FILE_TYPE,
+    PERMISSION,
+    MOD_TIME,
+    OWNER,
+    FULL_PATH
 };
 
 // 文件恢复时，文件树的列名
@@ -63,6 +63,7 @@ class MainWindow : public QMainWindow
     void onItemDoubleClicked(QTreeWidgetItem *item, int column);
     // 开始恢复文件
     void on_startRestoreButton_clicked();
+    void on_checkStateChange(QTreeWidgetItem *item, int column);
 
   private:
     /// 获取文件类型
@@ -93,6 +94,8 @@ class MainWindow : public QMainWindow
     void generateRecoverTreeItem(
         std::shared_ptr<backup::FileNode> root,
         QTreeWidgetItem *parent);
+    void TreeUpdateParentCheckState(QTreeWidgetItem *childItem);
+    void TreeItemSetCheckState(QTreeWidgetItem *item, Qt::CheckState state);
 
     QString CurPathToString();
     Ui::MainWindow *ui;

@@ -13,6 +13,7 @@
 namespace backup {
 #define RETRY_COUNT 10000
 #define SHA256_SIZE 32
+
 class Encrypt
 {
   public:

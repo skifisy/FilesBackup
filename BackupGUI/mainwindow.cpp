@@ -56,6 +56,11 @@ MainWindow::MainWindow(QWidget *parent)
         &QTreeWidget::itemDoubleClicked,
         this,
         &MainWindow::onItemDoubleClicked);
+    connect(
+        ui->backupFileList,
+        &QTreeWidget::itemChanged,
+        this,
+        &MainWindow::on_checkStateChange);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -143,7 +148,7 @@ void MainWindow::on_backupFiles(QSharedPointer<BackupConfig> config)
     std::vector<std::pair<std::string, std::string>> list;
     for (QTreeWidgetItem *item : filelist) {
         list.emplace_back(
-            item->text(2).toStdString(),
+            item->text(static_cast<int>(BackupEnum::FULL_PATH)).toStdString(),
             item->data(0, Qt::UserRole).toString().toStdString());
     }
     backup::BackUp *back = new backup::BackUpImpl();
@@ -260,7 +265,10 @@ MainWindow::getCheckedItems(QTreeWidget *tree, bool isRecursive)
     // 1. 遍历所有顶级项
     for (int i = 0; i < tree->topLevelItemCount(); i++) {
         auto item = tree->topLevelItem(i);
-        if (item->checkState(0) == Qt::Checked) { list.append(item); }
+        Qt::CheckState state = item->checkState(0);
+        if (state == Qt::Checked || state == Qt::PartiallyChecked) {
+            list.append(item);
+        }
         // 2. 递归添加子项
         if (isRecursive) getCheckedItems(list, item);
     }
@@ -438,6 +446,18 @@ QString MainWindow::CurPathToString()
     return s;
 }
 
+void MainWindow::TreeItemSetCheckState(
+    QTreeWidgetItem *item,
+    Qt::CheckState state)
+{
+    for (int i = 0; i < item->childCount(); i++) {
+        QTreeWidgetItem *child = item->child(i);
+        child->setCheckState(0, state);
+        // 递归设置
+        TreeItemSetCheckState(child, state);
+    }
+}
+
 void MainWindow::on_startRestoreButton_clicked()
 {
     QList<QTreeWidgetItem *> checked_items =
@@ -483,4 +503,60 @@ void MainWindow::on_startRestoreButton_clicked()
     } else {
         Message::warning(this, s.msg.c_str());
     }
+}
+
+void MainWindow::on_checkStateChange(QTreeWidgetItem *item, int column)
+{
+    if (column != 0) return;
+    disconnect(
+        ui->backupFileList,
+        &QTreeWidget::itemChanged,
+        this,
+        &MainWindow::on_checkStateChange);
+    if (item->text(static_cast<int>(BackupEnum::FILE_TYPE)) ==
+        GetTypeTag(backup::FileType::DIR)) {
+        Qt::CheckState state = item->checkState(column);
+        // 设置子项
+        TreeItemSetCheckState(item, state);
+    }
+    // 更新父项的状态
+    TreeUpdateParentCheckState(item);
+    connect(
+        ui->backupFileList,
+        &QTreeWidget::itemChanged,
+        this,
+        &MainWindow::on_checkStateChange);
+}
+
+// 更新父项的勾选状态
+void MainWindow::TreeUpdateParentCheckState(QTreeWidgetItem *childItem)
+{
+    QTreeWidgetItem *parentItem = childItem->parent();
+    if (!parentItem) {
+        return; // 如果没有父项，说明已经是顶级项了
+    }
+
+    // 检查父项下的所有子项的勾选状态
+    bool allChecked = true;
+    bool anyChecked = false;
+    for (int i = 0; i < parentItem->childCount(); ++i) {
+        Qt::CheckState state = parentItem->child(i)->checkState(0);
+        if (state == Qt::Checked) {
+            anyChecked = true;
+        } else if (state == Qt::Unchecked) {
+            allChecked = false;
+        }
+    }
+
+    // 根据子项的勾选状态更新父项的状态
+    if (allChecked) {
+        parentItem->setCheckState(0, Qt::Checked);
+    } else if (!anyChecked) {
+        parentItem->setCheckState(0, Qt::Unchecked);
+    } else {
+        parentItem->setCheckState(0, Qt::PartiallyChecked);
+    }
+
+    // 递归更新父项的父项
+    TreeUpdateParentCheckState(parentItem);
 }
