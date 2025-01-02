@@ -3,8 +3,8 @@
 // @brief
 // 哈夫曼树
 //
-// @author yuhaoze
-// @email 743544510@qq.com
+// @author hz
+// @email skyfishine@163.com
 //
 #include <cassert>
 #include <iostream>

@@ -4,8 +4,8 @@
 // 文件树，用于支持pack
 // 用于一个打包文件的内存表示
 //
-// @author yuhaoze
-// @email 743544510@qq.com
+// @author hz
+// @email skyfishine@163.com
 //
 #pragma once
 #include <fstream>

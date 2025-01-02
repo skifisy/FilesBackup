@@ -3,8 +3,8 @@
 // @brief
 // 测试哈夫曼树
 //
-// @author yuhaoze
-// @email 743544510@qq.com
+// @author hz
+// @email skyfishine@163.com
 //
 #include <gtest/gtest.h>
 #define private public

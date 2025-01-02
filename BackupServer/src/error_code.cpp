@@ -3,8 +3,8 @@
 // @brief
 // 实现错误码
 //
-// @author yuhaoze
-// @email 743544510@qq.com
+// @author hz
+// @email skyfishine@163.com
 //
 
 #include "error_code.h"

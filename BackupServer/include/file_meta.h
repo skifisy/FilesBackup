@@ -3,8 +3,8 @@
 // @brief
 // 文件元信息，用于文件的磁盘表示
 //
-// @author yuhaoze
-// @email 743544510@qq.com
+// @author hz
+// @email skyfishine@163.com
 //
 #pragma once
 
@@ -98,7 +98,7 @@ struct FileMetadata
     bool is_linked_to;        // 是否为软链接文件指向的文件
     std::string link_to_path; // 软链接指向的文件路径（原始路径）
     std::string link_to_full_path; // 软链接指向的文件->绝对路径
-    char hash
+    unsigned char hash
         [SHA256_SIZE]; // 文件内容的哈希值(用于备份验证)，仅在REGULAR文件时Dump
     uint64_t link_num; // 文件的链接数（硬链接）
     uint64_t ino;      // inode节点号
@@ -133,7 +133,7 @@ size_t DumpVar(const T &t, std::ofstream &ofs)
 
 size_t DumpVar(bool t, std::ofstream &ofs);
 
-size_t DumpArray(const char *arr, int size, std::ofstream &ofs);
+size_t DumpArray(const unsigned char *arr, int size, std::ofstream &ofs);
 
 template <typename T>
 size_t LoadVar(T &t, std::ifstream &ifs)
@@ -144,6 +144,6 @@ size_t LoadVar(T &t, std::ifstream &ifs)
 
 size_t LoadVar(bool &t, std::ifstream &ifs);
 
-size_t LoadArray(char *arr, int size, std::ifstream &ifs);
+size_t LoadArray(unsigned char *arr, int size, std::ifstream &ifs);
 
 } // namespace backup

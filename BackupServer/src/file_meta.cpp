@@ -2,6 +2,8 @@
 
 #include "file_meta.h"
 #include <iostream>
+#include "error_code.h"
+
 namespace backup {
 
 size_t DumpString(const std::string &str, std::ofstream &ofs)
@@ -27,9 +29,9 @@ size_t DumpVar(bool t, std::ofstream &ofs)
     return DumpVar(b, ofs);
 }
 
-size_t DumpArray(const char *arr, int size, std::ofstream &ofs)
+size_t DumpArray(const unsigned char *arr, int size, std::ofstream &ofs)
 {
-    ofs.write(arr, size);
+    ofs.write(reinterpret_cast<const char *>(arr), size);
     return size;
 }
 
@@ -41,9 +43,9 @@ size_t LoadVar(bool &t, std::ifstream &ifs)
     return ret;
 }
 
-size_t LoadArray(char *arr, int size, std::ifstream &ifs)
+size_t LoadArray(unsigned char *arr, int size, std::ifstream &ifs)
 {
-    ifs.read(arr, size);
+    ifs.read(reinterpret_cast<char *>(arr), size);
     return size;
 }
 
@@ -98,7 +100,7 @@ size_t FileMetadata::Dump(std::ofstream &ofs) const
     ret += DumpString(link_to_path, ofs);
     ret += DumpString(link_to_full_path, ofs);
     // if (type == static_cast<int>(FileType::REG))
-        ret += DumpArray(hash, SHA256_SIZE, ofs);
+    ret += DumpArray(hash, SHA256_SIZE, ofs);
     ret += DumpVar(link_num, ofs);
     ret += DumpVar(ino, ofs);
     ret += DumpVar(data_offset, ofs);
@@ -123,7 +125,7 @@ size_t FileMetadata::Load(std::ifstream &ifs)
     ret += LoadString(link_to_path, ifs);
     ret += LoadString(link_to_full_path, ifs);
     // if (type == static_cast<int>(FileType::REG))
-        ret += LoadArray(hash, SHA256_SIZE, ifs);
+    ret += LoadArray(hash, SHA256_SIZE, ifs);
     ret += LoadVar(link_num, ifs);
     ret += LoadVar(ino, ifs);
     ret += LoadVar(data_offset, ifs);
@@ -160,7 +162,18 @@ void FileMetadata::SetFromPath(const Path &src, const std::string &dest)
     is_linked_to = false;
     link_num = st.st_nlink; // 硬链接数
     ino = st.st_ino;
-    // TODO: hash
+    if (fileType == FileType::REG) {
+        // Attention: 一定不能打开管道文件（会阻塞）
+        std::ifstream ifs(src.ToString(), std::ios::binary);
+
+        if (!ifs.is_open() || ifs.bad())
+            throw Status{ERROR, "无法打开文件" + src.ToString()};
+        if (!compute_file_sha256(
+                ifs, reinterpret_cast<unsigned char *>(hash))) {
+            throw Status{
+                UNABLE_HASH, "文件" + src.ToString() + "无法计算哈希值"};
+        }
+    }
 }
 
 } // namespace backup

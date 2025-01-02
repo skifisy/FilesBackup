@@ -45,6 +45,9 @@ void CompareNode(std::shared_ptr<FileNode> n1, std::shared_ptr<FileNode> n2)
     EXPECT_EQ(meta1.link_num, meta2.link_num);
     EXPECT_EQ(meta1.ino, meta2.ino);
     EXPECT_EQ(meta1.data_offset, meta2.data_offset);
+    if (meta1.type == static_cast<int>(FileType::REG)) {
+        EXPECT_EQ(::memcmp(meta1.hash, meta2.hash, SHA256_SIZE), 0);
+    }
 }
 
 void CompareHeader(
@@ -201,10 +204,21 @@ TEST(FileTreeTest, PackFileAdd)
 
 TEST(FileTreeTest, FileTreeDump)
 {
-    EXPECT_EQ(::system("rm -rf for_recover"), 0);
-    EXPECT_EQ(::system("echo \"hello world\" > f1"), 0);
+    EXPECT_EQ(::system("rm -rf recover2"), 0);
+    EXPECT_EQ(::system("echo -n \"hello world\" > file_test1"), 0);
     FileTree tree;
-    tree.PackFileAdd("f1", "");
+    tree.PackFileAdd("file_test1", "");
+    unsigned char hash0[SHA256_SIZE];
+    std::ifstream input("file_test1", std::ios::binary);
+    EXPECT_TRUE(compute_file_sha256(input, hash0));
+
+    EXPECT_EQ(
+        ::memcmp(
+            hash0,
+            tree.root_->children_["file_test1"]->meta_.hash,
+            SHA256_SIZE),
+        0);
+    input.close();
 
     std::ofstream ofs("packfile", std::ios::binary);
     tree.FullDump(ofs);
@@ -216,11 +230,35 @@ TEST(FileTreeTest, FileTreeDump)
     tree2.Load(ifs);
     EXPECT_EQ(tree2.count_, 1);
     CompareHeader(tree.header_, tree2.header_);
-    CompareNode(tree.root_->children_["f1"], tree2.root_->children_["f1"]);
-    tree2.Recover("", ifs, "for_recover");
-    EXPECT_EQ(::system("cmp f1 for_recover/f1"), 0);
+    CompareNode(
+        tree.root_->children_["file_test1"],
+        tree2.root_->children_["file_test1"]);
+    tree2.Recover("", ifs, "recover2");
+
+    unsigned char hash1[SHA256_SIZE];
+    unsigned char hash2[SHA256_SIZE];
+    std::ifstream ifss("file_test1", std::ios::binary);
+    EXPECT_TRUE(compute_file_sha256(ifss, hash1));
+    std::ifstream recover_file("recover2/file_test1", std::ios::binary);
+    EXPECT_TRUE(compute_file_sha256(recover_file, hash2));
+    EXPECT_EQ(::memcmp(hash1, hash2, SHA256_SIZE), 0);
+    EXPECT_EQ(::memcmp(hash0, hash2, SHA256_SIZE), 0);
+    EXPECT_EQ(
+        ::memcmp(
+            tree.root_->children_["file_test1"]->meta_.hash,
+            hash1,
+            SHA256_SIZE),
+        0);
+    EXPECT_EQ(
+        ::memcmp(
+            tree2.root_->children_["file_test1"]->meta_.hash,
+            hash2,
+            SHA256_SIZE),
+        0);
+
+    EXPECT_EQ(::system("cmp file_test1 recover2/file_test1"), 0);
     ifs.close();
-    EXPECT_EQ(::system("rm -rf f1"), 0);
+    EXPECT_EQ(::system("rm -rf file_test1 recover2"), 0);
 }
 
 TEST(FileTreeTest, FileTreeDump2)
@@ -254,6 +292,25 @@ TEST(FileTreeTest, FileTreeDump2)
     CompareNode(dir1->children_["f3"], dir2->children_["f3"]);
     tree2.Recover("", ifs, "for_recover");
     ifs.close();
+    unsigned char hash1[SHA256_SIZE], hash2[SHA256_SIZE];
+    ifs.open("dir/f1", std::ios::binary);
+    compute_file_sha256(ifs, hash1);
+    ifs.close();
+    ifs.open("for_recover/dir/f1", std::ios::binary);
+    compute_file_sha256(ifs, hash2);
+    EXPECT_EQ(::memcmp(hash1, hash2, SHA256_SIZE), 0);
+    EXPECT_EQ(
+        ::memcmp(
+            tree.root_->children_["dir"]->children_["f1"]->meta_.hash,
+            hash1,
+            SHA256_SIZE),
+        0);
+    EXPECT_EQ(
+        ::memcmp(
+            tree2.root_->children_["dir"]->children_["f1"]->meta_.hash,
+            hash2,
+            SHA256_SIZE),
+        0);
     EXPECT_EQ(::system("cmp dir/f1 for_recover/dir/f1"), 0);
     EXPECT_EQ(::system("cmp dir/f2 for_recover/dir/f2"), 0);
     EXPECT_EQ(::system("cmp dir/f3 for_recover/dir/f3"), 0);
@@ -279,6 +336,24 @@ TEST(FileTreeTest, BigFilePackTest)
     tree2.Load(ifs);
     tree2.Recover("test.jpg", ifs, "recover");
     ifs.close();
+
+    // 计算hash
+    unsigned char hash1[SHA256_SIZE], hash2[SHA256_SIZE];
+    ifs.open("test.jpg", std::ios::binary);
+    compute_file_sha256(ifs, hash1);
+    ifs.close();
+    ifs.open("recover/test.jpg", std::ios::binary);
+    compute_file_sha256(ifs, hash2);
+    EXPECT_EQ(::memcmp(hash1, hash2, SHA256_SIZE), 0);
+    EXPECT_EQ(
+        ::memcmp(
+            tree.root_->children_["test.jpg"]->meta_.hash, hash1, SHA256_SIZE),
+        0);
+    EXPECT_EQ(
+        ::memcmp(
+            tree2.root_->children_["test.jpg"]->meta_.hash, hash2, SHA256_SIZE),
+        0);
+
     EXPECT_EQ(::system("cmp test.jpg recover/test.jpg"), 0);
     EXPECT_EQ(::system("rm -rf recover packfile"), 0);
 }

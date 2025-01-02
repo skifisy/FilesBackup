@@ -3,8 +3,8 @@
 // @brief
 // 文件备份（主要的api）
 //
-// @author yuhaoze
-// @email 743544510@qq.com
+// @author hz
+// @email skyfishine@163.com
 //
 
 #pragma once
@@ -13,7 +13,6 @@
 #include "error_code.h"
 #include "file_tree.h"
 namespace backup {
-
 
 struct BackupConfig
 {
@@ -25,7 +24,6 @@ struct BackupConfig
     bool is_encrypt;
     // 文件密码
     std::string password;
-
 };
 
 struct BackupHeader

@@ -3,8 +3,8 @@
 // @brief
 // 配置信息
 //
-// @author yuhaoze
-// @email 743544510@qq.com
+// @author hz
+// @email skyfishine@163.com
 //
 #pragma once
 

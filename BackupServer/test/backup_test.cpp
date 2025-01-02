@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "backup_impl.h"
+#include "encrypt.h"
 #include <unordered_set>
 using namespace backup;
 class BackupTestFixture : public ::testing::Test
@@ -100,5 +101,17 @@ TEST_F(BackupTestFixture, RestoreBach)
     EXPECT_EQ(s.code, OK);
     EXPECT_EQ(::system("cmp dir/f1 recover1/dir/f1"), 0);
     EXPECT_EQ(::system("cmp dir/f2 recover1/dir/f2"), 0);
+    // 验证哈希值
+    std::ifstream ifs1("dir/f1", std::ios::binary),
+        ifs2("recover1/dir/f1", std::ios::binary);
+    unsigned char hash1[SHA256_SIZE], hash2[SHA256_SIZE];
+    compute_file_sha256(ifs1, hash1);
+    compute_file_sha256(ifs2, hash2);
+    EXPECT_EQ(::memcmp(hash1, hash2, SHA256_SIZE), 0);
+    ifs1.open("dir/f2", std::ios::binary);
+    ifs2.open("recover1/dir/f2", std::ios::binary);
+    compute_file_sha256(ifs1, hash1);
+    compute_file_sha256(ifs2, hash2);
+    EXPECT_EQ(::memcmp(hash1, hash2, SHA256_SIZE), 0);
     EXPECT_EQ(::system("rm -rf dir recover1 backup_test"), 0);
 }

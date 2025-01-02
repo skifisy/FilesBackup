@@ -3,8 +3,8 @@
 // @brief
 // 加密
 //
-// @author yuhaoze
-// @email 743544510@qq.com
+// @author hz
+// @email skyfishine@163.com
 //
 #include <openssl/aes.h>
 #include <openssl/evp.h>

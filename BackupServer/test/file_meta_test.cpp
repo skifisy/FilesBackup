@@ -87,3 +87,14 @@ TEST_F(DumpTest, DumpBool)
     LoadVar(b2, ifs);
     EXPECT_EQ(b1, b2);
 }
+
+TEST(FileMetadata, SetFromPath)
+{
+    EXPECT_EQ(::system("echo \"hello\" > f1"), 0);
+    FileMetadata meta;
+    meta.SetFromPath("f1");
+    std::ifstream ifs("f1", std::ios::binary);
+    unsigned char hash[SHA256_SIZE];
+    compute_file_sha256(ifs, hash);
+    EXPECT_EQ(::memcmp(hash, meta.hash, SHA256_SIZE), 0);
+}
