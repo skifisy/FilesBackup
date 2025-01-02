@@ -86,16 +86,17 @@ struct FileMetadata
     // 相对路径，相对于打包文件
     std::string pack_path; // 文件或文件夹的打包路径（含文件名）
     std::string name;      // 文件名
-    std::string origin_path;  // 源路径（用于验证）
-    bool is_directory;        // 是否为文件夹
-    uint8_t type;             // 文件类型
-    uint64_t size;            // 文件大小（如果是文件夹则为0）
-    mode_t permissions;       // 文件权限
-    time_t mod_time;          // 最后修改时间
-    time_t access_time;       // 最后访问时间
-    uint32_t uid;             // 用户id
-    uint32_t gid;             // 用户组id
-    bool is_linked_to;        // 是否为软链接文件指向的文件
+    std::string origin_path;      // 源路径（用于验证）
+    bool is_directory;            // 是否为文件夹
+    bool is_partly_check = false; // 是否部分检查（对于文件夹）
+    uint8_t type;                 // 文件类型
+    uint64_t size;                // 文件大小（如果是文件夹则为0）
+    mode_t permissions;           // 文件权限
+    time_t mod_time;              // 最后修改时间
+    time_t access_time;           // 最后访问时间
+    uint32_t uid;                 // 用户id
+    uint32_t gid;                 // 用户组id
+    bool is_linked_to;            // 是否为软链接文件指向的文件
     std::string link_to_path; // 软链接指向的文件路径（原始路径）
     std::string link_to_full_path; // 软链接指向的文件->绝对路径
     unsigned char hash
@@ -107,7 +108,7 @@ struct FileMetadata
     {
         return sizeof(uint32_t) * 5 // string
                + pack_path.size() + name.size() + origin_path.size() +
-               sizeof(uint8_t) * 2 // bool
+               sizeof(uint8_t) * 3 // bool
                + sizeof(type) + sizeof(size) + sizeof(permissions) +
                sizeof(mod_time) + sizeof(access_time) + sizeof(uid) +
                sizeof(gid) + link_to_path.size() + link_to_full_path.size() +

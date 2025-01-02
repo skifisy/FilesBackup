@@ -47,9 +47,13 @@ class FileTree
      * @param src 磁盘路径（文件/文件夹）（相对/绝对路径，内部会处理)
      * @param dest 打包路径（不含开始/，结尾不含/）
      * @param recursively 对于文件夹是否要递归处理
+     * @param is_partly 文件夹是否部分选中
      */
-    void
-    PackFileAdd(const Path &src, const Path &dest, bool recursively = true);
+    void PackFileAdd(
+        const Path &src,
+        const Path &dest,
+        bool recursively = true,
+        bool is_partly = false);
 
     /**
      * @brief 全量备份，落盘到磁盘上
@@ -84,7 +88,8 @@ class FileTree
     void PackFileAdd(
         const Path &path,
         std::shared_ptr<FileNode> file_node,
-        bool recursively = true);
+        bool recursively = true,
+        bool is_partly = false);
     /**
      * @brief 保存被软连接指向的文件
      * @param path 相对/绝对路径（内部会转成绝对）

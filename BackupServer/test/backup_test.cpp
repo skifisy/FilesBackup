@@ -44,7 +44,7 @@ TEST_F(BackupTestFixture, BackupBatch)
 TEST_F(BackupTestFixture, BackupBatch2)
 {
     EXPECT_EQ(::system("mkdir dir && touch dir/f1 dir/f2"), 0);
-    std::vector<std::pair<std::string, std::string>> filelist;
+    std::vector<BackupData> filelist;
     filelist.emplace_back("dir", "");
     filelist.emplace_back("dir/f1", "dir");
     filelist.emplace_back("dir/f2", "dir");
@@ -64,7 +64,7 @@ TEST_F(BackupTestFixture, BackupBatch2)
 TEST_F(BackupTestFixture, BackupBatchEncrypted)
 {
     EXPECT_EQ(::system("mkdir dir && touch dir/f1 dir/f2"), 0);
-    std::vector<std::pair<std::string, std::string>> filelist;
+    std::vector<BackupData> filelist;
     filelist.emplace_back("dir", "");
     filelist.emplace_back("dir/f1", "dir");
     filelist.emplace_back("dir/f2", "dir");
@@ -90,7 +90,7 @@ TEST_F(BackupTestFixture, RestoreBach)
     EXPECT_EQ(::system("mkdir dir"), 0);
     EXPECT_EQ(
         ::system("echo \"hello1\" > dir/f1 && echo \"hello2\" > dir/f2"), 0);
-    std::vector<std::pair<std::string, std::string>> filelist;
+    std::vector<BackupData> filelist;
     filelist.emplace_back("dir", "");
     filelist.emplace_back("dir/f1", "dir");
     filelist.emplace_back("dir/f2", "dir");

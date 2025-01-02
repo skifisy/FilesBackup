@@ -7,9 +7,13 @@
 
 enum RegularTimeType
 {
-    none = 0,
-    every_day = 1,
-    every_week = 2
+    SECOND,
+    MINUTE,
+    HOUR,
+    DAY,
+    WEEK,
+    MONTH,
+    YEAR
 };
 struct BackupConfig
 {
@@ -44,9 +48,11 @@ class BackupConfigDialog : public QDialog
 
     void on_startButton_clicked();
 
-  private:
+    void on_comboBox_currentIndexChanged(int index);
+
+private:
     Ui::BackupConfigDialog *ui;
-    QButtonGroup *buttonGroup;
+    // QButtonGroup *buttonGroup;
 };
 
 #endif // BACKUPCONFIGDIALOG_H

@@ -5,7 +5,8 @@
 #include <unistd.h>   // For read, write, link
 #include <utime.h>    // For utime
 #include <pwd.h>      // getpwuid
-
+#include <sstream>
+#include <grp.h>
 #include <cassert>
 #include <cstring>
 #include <iostream>
@@ -186,11 +187,12 @@ bool SaveFileMetaData(const FileMetadata &meta, const std::string &target)
 
     // 修改拥有者/组
     // root用户才能修改uid
-    if(getuid() == 0 ) {
+    if (getuid() == 0) {
         if (lchown(target.c_str(), meta.uid, meta.gid) != 0) {
-            // throw Status{errno, "无法修改文件" + target + "的用户组信息; " + strerror(errno)};
+            // throw Status{errno, "无法修改文件" + target + "的用户组信息; " +
+            // strerror(errno)};
             std::cerr << "Can not modify user id or group id of " << target
-                    << std::endl;
+                      << std::endl;
             ret = false;
         }
     }
@@ -267,6 +269,82 @@ std::string UidToString(uid_t uid)
     }
 }
 
+std::string GidToString(gid_t uid)
+{
+    struct group *gr = getgrgid(uid);
+    if (gr) {
+        return std::string(gr->gr_name);
+    } else {
+        return "Unknown User";
+    }
+}
+std::string FormatTime(time_t tm, std::string format)
+{
+    std::tm *localTime = std::localtime(&tm);
+    char buffer[100];
+    std::strftime(buffer, sizeof(buffer), format.c_str(), localTime);
+    return std::string(buffer);
+}
+
+std::string FormatDouble(double d, int width = 2)
+{
+    // 使用 ostringstream 格式化浮点数
+    std::ostringstream stream;
+    stream << std::fixed << std::setprecision(width) << d;
+    // 将格式化后的结果保存到字符串
+    return stream.str();
+}
+
+std::string FormatSize(uint64_t size)
+{
+    if (size < 1024) {
+        return std::to_string(size) + 'B';
+    } else if (size < 1024 * 1024) {
+        return FormatDouble(size / 1024.0) + "KB";
+    } else if (size < 1024 * 1024 * 1024) {
+        return FormatDouble(size / (1024.0 * 1024)) + "MB";
+    } else {
+        return FormatDouble(size / (1024.0 * 1024 * 1024)) + "GB";
+    }
+}
+
+std::string FormatPermission(mode_t permission, FileType type)
+{
+    std::string per_s;
+    switch (type) {
+    case FileType::REG:
+        per_s += '-';
+        break;
+    case FileType::DIR:
+        per_s += 'd';
+        break;
+    case FileType::FIFO:
+        per_s += 'p';
+        break;
+    case FileType::FLNK:
+        per_s += 'l';
+        break;
+    default:
+        per_s += '?';
+        break;
+    }
+    // 用户权限
+    per_s += (permission & S_IRUSR) ? 'r' : '-';
+    per_s += (permission & S_IWUSR) ? 'w' : '-';
+    per_s += (permission & S_IXUSR) ? 'x' : '-';
+
+    // 组权限
+    per_s += (permission & S_IRGRP) ? 'r' : '-';
+    per_s += (permission & S_IWGRP) ? 'w' : '-';
+    per_s += (permission & S_IXGRP) ? 'x' : '-';
+
+    // 其他权限
+    per_s += (permission & S_IROTH) ? 'r' : '-';
+    per_s += (permission & S_IWOTH) ? 'w' : '-';
+    per_s += (permission & S_IXOTH) ? 'x' : '-';
+    return per_s;
+}
+
 ErrorCode Access(const std::string &path, int permission)
 {
     auto ret = access(path.c_str(), permission);
@@ -281,6 +359,22 @@ ErrorCode Access(const std::string &path, int permission)
         default:
             return ERROR;
         }
+    }
+}
+
+std::string GetFileTypeTag(FileType type)
+{
+    switch (type) {
+    case FileType::REG:
+        return "文件";
+    case FileType::DIR:
+        return "文件夹";
+    case FileType::FLNK:
+        return "软链接";
+    case FileType::FIFO:
+        return "管道";
+    default:
+        return "文件";
     }
 }
 } // namespace backup

@@ -31,6 +31,8 @@ enum class FileType : uint8_t
     NOTEXIST // 文件不存在
 };
 
+std::string GetFileTypeTag(FileType type);
+
 class Path
 {
   public:
@@ -111,6 +113,10 @@ bool RemoveFile(const Path &path) noexcept;
 bool RemoveAll(const Path &path);
 
 std::string UidToString(uid_t uid);
+std::string GidToString(gid_t gid);
+std::string FormatTime(time_t tm, std::string format = "%Y-%m-%d %H:%M:%S");
+std::string FormatSize(uint64_t size);
+std::string FormatPermission(mode_t permission, FileType type);
 
 enum Permission
 {

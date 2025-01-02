@@ -35,6 +35,13 @@ struct BackupHeader
     size_t Load(std::ifstream &ifs);
 };
 
+struct BackupData
+{
+    std::string src;
+    std::string dest;
+    bool is_partly = false;
+};
+
 class BackUp
 {
   public:
@@ -44,7 +51,7 @@ class BackUp
 
     virtual Status BackupBatch(
         const BackupConfig &config,
-        const std::vector<std::pair<std::string, std::string>> &src_path) = 0;
+        const std::vector<BackupData> &src_path) = 0;
 
     /**
      * @brief 将打包文件中的部分文件批量恢复到某个文件夹中

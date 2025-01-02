@@ -82,41 +82,69 @@
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
+       <property name="spacing">
+        <number>14</number>
+       </property>
        <property name="leftMargin">
         <number>0</number>
        </property>
        <item>
-        <widget class="QRadioButton" name="noneRadioButton">
-         <property name="text">
-          <string>不定时</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
+        <widget class="QLineEdit" name="timeInterval"/>
+       </item>
+       <item>
+        <widget class="QComboBox" name="timeSelection">
+         <item>
+          <property name="text">
+           <string>秒</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>分钟</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>小时</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>天</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>周</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>月</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>年</string>
+          </property>
+         </item>
         </widget>
        </item>
        <item>
-        <widget class="QRadioButton" name="everydayRadioButton">
-         <property name="text">
-          <string>每天</string>
+        <widget class="QWidget" name="widget" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
-         <property name="checked">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="everyweekRadioButton">
-         <property name="text">
-          <string>每周</string>
-         </property>
-         <property name="checked">
-          <bool>false</bool>
+         <property name="minimumSize">
+          <size>
+           <width>178</width>
+           <height>0</height>
+          </size>
          </property>
         </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="comboBox"/>
        </item>
       </layout>
      </item>

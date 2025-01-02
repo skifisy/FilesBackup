@@ -89,6 +89,7 @@ size_t FileMetadata::Dump(std::ofstream &ofs) const
     ret += DumpString(name, ofs);
     ret += DumpString(origin_path, ofs);
     ret += DumpVar(is_directory, ofs);
+    ret += DumpVar(is_partly_check, ofs);
     ret += DumpVar(type, ofs);
     ret += DumpVar(size, ofs);
     ret += DumpVar(permissions, ofs);
@@ -114,6 +115,7 @@ size_t FileMetadata::Load(std::ifstream &ifs)
     ret += LoadString(name, ifs);
     ret += LoadString(origin_path, ifs);
     ret += LoadVar(is_directory, ifs);
+    ret += LoadVar(is_partly_check, ifs);
     ret += LoadVar(type, ifs);
     ret += LoadVar(size, ifs);
     ret += LoadVar(permissions, ifs);

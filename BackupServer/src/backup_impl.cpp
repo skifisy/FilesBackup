@@ -105,7 +105,7 @@ Status BackUpImpl::BackupBatch(
 
 Status BackUpImpl::BackupBatch(
     const BackupConfig &config,
-    const std::vector<std::pair<std::string, std::string>> &src_path)
+    const std::vector<BackupData> &src_path)
 {
     // validate
     if (config.backup_name.empty()) {
@@ -123,8 +123,8 @@ Status BackUpImpl::BackupBatch(
     try {
         // 1. 打包文件
         FileTree filetree;
-        for (const auto &[src, dest] : src_path) {
-            filetree.PackFileAdd(src, dest, false);
+        for (const auto &[src, dest, is_partly] : src_path) {
+            filetree.PackFileAdd(src, dest, false, is_partly);
         }
         std::string pack_path = target_path + "_pack_temp";
         std::ofstream packfile_ofs(pack_path, std::ios::binary);

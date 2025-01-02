@@ -22,7 +22,6 @@ qt_add_resources(RESOURCES resource.qrc)
 set(PROJECT_SOURCES
         main.cpp
         mainwindow.cpp mainwindow.h mainwindow.ui
-        mydialog.h mydialog.cpp mydialog.ui
         backupconfigdialog.h backupconfigdialog.cpp backupconfigdialog.ui
         fileexplore.h fileexplore.cpp
         message.h input_dialog.h 

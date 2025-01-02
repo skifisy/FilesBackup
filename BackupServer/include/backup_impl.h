@@ -22,11 +22,10 @@ class BackUpImpl : public BackUp
     /**
      * @brief 批量打包文件
      * @param config 打包配置
-     * @param src_path <文件源路径, 打包目标路径>
      */
     Status BackupBatch(
         const BackupConfig &config,
-        const std::vector<std::pair<std::string, std::string>> &src_path);
+        const std::vector<BackupData> &src_path);
 
     /**
      * @brief 根据打包文件，获取文件list

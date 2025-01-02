@@ -7,12 +7,12 @@ namespace backup {
 
 FileNode::FileNode(std::ifstream &ifs) { meta_.Load(ifs); }
 
-void FileTree::PackFileAdd(const Path &src, const Path &dest, bool recursively)
+void FileTree::PackFileAdd(const Path &src, const Path &dest, bool recursively, bool is_partly)
 {
     // assert(!src.IsRelative());
     assert(dest.IsRelative());
     std::shared_ptr<FileNode> file_node = LocateAndCreateDir(dest);
-    PackFileAdd(src, file_node, recursively);
+    PackFileAdd(src, file_node, recursively, is_partly);
 }
 
 void FileTree::FullDump(std::ofstream &ofs)
@@ -76,7 +76,8 @@ void FileTree::Recover(
 void FileTree::PackFileAdd(
     const Path &src,
     std::shared_ptr<FileNode> dest,
-    bool recursively)
+    bool recursively,
+    bool is_partly)
 {
     std::shared_ptr<FileNode> cur = nullptr;
     auto ret = dest->children_.find(src.FileName());
@@ -88,6 +89,7 @@ void FileTree::PackFileAdd(
         dest->children_.emplace(src.FileName(), cur);
     }
     cur->meta_.SetFromPath(src, dest->meta_.pack_path);
+    cur->meta_.is_partly_check = is_partly;
     std::vector<Path> files_in_dir;
     switch (src.GetFileType()) {
     case FileType::REG:

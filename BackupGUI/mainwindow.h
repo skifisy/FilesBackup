@@ -8,6 +8,7 @@
 #include "file_sys.h"
 #include <QTreeWidgetItem>
 #include "file_tree.h"
+#include "backup_check.h"
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -27,7 +28,7 @@ enum class BackupEnum
 };
 
 // 文件恢复时，文件树的列名
-enum struct RecoverEnum
+enum class RecoverEnum
 {
     FILE_NAME = 0,
     SIZE,
@@ -35,6 +36,15 @@ enum struct RecoverEnum
     PERMISSION,
     MOD_TIME,
     OWNER
+};
+
+// 备份验证，tree widget列名
+enum class CheckEnum
+{
+    DIFF_TYPE,   // 差异类型
+    ORIGIN_PATH, // 源路径
+    BACKUP_PATH, // 备份路径
+    DETAILS,     // 详情
 };
 
 class MainWindow : public QMainWindow
@@ -65,11 +75,18 @@ class MainWindow : public QMainWindow
     void on_startRestoreButton_clicked();
     void on_checkStateChange(QTreeWidgetItem *item, int column);
 
+    void on_browseCheckFile_clicked();
+
+    void on_checkResultList_itemClicked(QTreeWidgetItem *item, int column);
+
+    void on_checkResultList_customContextMenuRequested(const QPoint &pos);
+
   private:
     /// 获取文件类型
     QString GetTypeTag(backup::FileType type);
     /// 获取文件图标
     QString GetFileIcon(backup::FileType type);
+    QString GetCheckTypeTag(backup::CheckType type);
 
     // 文件备份创建item
     void generateTreeItem(const backup::Path &dir, QTreeWidgetItem *parent);
@@ -78,8 +95,10 @@ class MainWindow : public QMainWindow
         backup::FileType filetype,
         const QString &fullpath,
         const QString &pack_path);
+
     QList<QTreeWidgetItem *>
     getCheckedItems(QTreeWidget *tree, bool isRecursive = true);
+
     void getCheckedItems(QList<QTreeWidgetItem *> &list, QTreeWidgetItem *root);
 
     // 文件恢复创建item
@@ -91,10 +110,13 @@ class MainWindow : public QMainWindow
         const QString &mod_time,
         const QString &owner,
         bool setCheckState = true);
+
     void generateRecoverTreeItem(
         std::shared_ptr<backup::FileNode> root,
         QTreeWidgetItem *parent);
+
     void TreeUpdateParentCheckState(QTreeWidgetItem *childItem);
+
     void TreeItemSetCheckState(QTreeWidgetItem *item, Qt::CheckState state);
 
     QString CurPathToString();

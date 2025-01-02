@@ -5,18 +5,16 @@
 #include "ui_backupconfigdialog.h"
 #include "input_dialog.h"
 
-
-
 BackupConfigDialog::BackupConfigDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::BackupConfigDialog)
 {
     ui->setupUi(this);
-    buttonGroup = new QButtonGroup(this);
-    buttonGroup->addButton(ui->noneRadioButton, RegularTimeType::none);
-    buttonGroup->addButton(ui->everydayRadioButton, RegularTimeType::every_day);
-    buttonGroup->addButton(
-        ui->everyweekRadioButton, RegularTimeType::every_week);
+    // buttonGroup = new QButtonGroup(this);
+    // buttonGroup->addButton(ui->noneRadioButton, RegularTimeType::none);
+    // buttonGroup->addButton(ui->everydayRadioButton,
+    // RegularTimeType::every_day); buttonGroup->addButton(
+    //     ui->everyweekRadioButton, RegularTimeType::every_week);
 }
 
 BackupConfigDialog::~BackupConfigDialog() { delete ui; }
@@ -54,28 +52,31 @@ void BackupConfigDialog::on_startButton_clicked()
     // packfiles
     QSharedPointer<BackupConfig> config(new BackupConfig);
     config->backPath = ui->backupFileDirectoryLineEdit->text();
-    config->filename = ui->backupFilenameLineEdit->text()+".bak";
+    config->filename = ui->backupFilenameLineEdit->text() + ".bak";
     config->isEncrypt = ui->passwordCheckBox->isChecked();
     if (config->isEncrypt) { config->password = ui->passwordLineEdit->text(); }
 
     // validate
-    if(config->filename.isEmpty()) {
+    if (config->filename.isEmpty()) {
         Message::warning(this, "备份文件名不能为空！");
         return;
     }
-    if(config->backPath.isEmpty()) {
+    if (config->backPath.isEmpty()) {
         Message::warning(this, "备份路径不能为空！");
         return;
-
     }
-    if(config->isEncrypt && config->password.isEmpty()) {
+    if (config->isEncrypt && config->password.isEmpty()) {
         Message::warning(this, "文件密码不能为空!");
         return;
     }
     // 获取选中的time check按钮
-    QAbstractButton *selectedButton = buttonGroup->checkedButton();
-    config->timetype =
-        static_cast<RegularTimeType>(buttonGroup->id(selectedButton));
+    // QAbstractButton *selectedButton = buttonGroup->checkedButton();
+    // config->timetype =
+    //     static_cast<RegularTimeType>(buttonGroup->id(selectedButton));
+    ui->timeInterval->text();
+    ui->timeSelection;
     emit backupFile(config);
     this->hide();
 }
+
+void BackupConfigDialog::on_comboBox_currentIndexChanged(int index) {}

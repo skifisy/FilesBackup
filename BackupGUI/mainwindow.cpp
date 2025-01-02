@@ -1,6 +1,5 @@
 #include "mainwindow.h"
-#include "./ui_mainwindow.h"
-#include "mydialog.h"
+#include "ui_mainwindow.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <QInputDialog>
@@ -9,12 +8,17 @@
 #include <QAction>
 #include <QScreen>
 #include <QFileDialog>
+#include <QDesktopServices>
+#include <QMenu>
 #include <QLineEdit>
+#include <QToolTip>
+#include <QClipboard>
 #include "backupconfigdialog.h"
 #include "backup_impl.h"
 #include "message.h"
 #include "input_dialog.h"
 #include "util.h"
+#include "backup_check.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -46,6 +50,7 @@ MainWindow::MainWindow(QWidget *parent)
         "QLineEdit { padding-left: 5px; }"); // 给文本框添加内边距以便给图标留空间
     ui->packPathLineEdit->addAction(
         icon, QLineEdit::LeadingPosition); // 在左侧添加图标
+    ui->checkResultList->setIndentation(0);
     connect(
         backupDialog,
         &BackupConfigDialog::backupFile,
@@ -145,11 +150,12 @@ void MainWindow::on_deleteFileButton_clicked()
 void MainWindow::on_backupFiles(QSharedPointer<BackupConfig> config)
 {
     QList<QTreeWidgetItem *> filelist = getCheckedItems(ui->backupFileList);
-    std::vector<std::pair<std::string, std::string>> list;
+    std::vector<backup::BackupData> list;
     for (QTreeWidgetItem *item : filelist) {
         list.emplace_back(
             item->text(static_cast<int>(BackupEnum::FULL_PATH)).toStdString(),
-            item->data(0, Qt::UserRole).toString().toStdString());
+            item->data(0, Qt::UserRole).toString().toStdString(),
+            item->checkState(0) == Qt::PartiallyChecked);
     }
     backup::BackUp *back = new backup::BackUpImpl();
     backup::BackupConfig backupConfig{
@@ -203,6 +209,27 @@ QString MainWindow::GetFileIcon(backup::FileType type)
     }
 }
 
+QString MainWindow::GetCheckTypeTag(backup::CheckType type)
+{
+    switch (type) {
+    case backup::CheckType::ADD:
+        return "新增文件";
+    case backup::CheckType::DELETE:
+        return "文件删除";
+    case backup::CheckType::META_UPDATE:
+        return "元信息修改";
+    case backup::CheckType::DATA_UPDATE:
+        return "文件内容修改";
+    case backup::CheckType::UPDATE:
+        return "元信息和\n内容被修改";
+    case backup::CheckType::OTHER:
+        return "其他";
+    default:
+        break;
+    }
+    return QString();
+}
+
 void MainWindow::generateTreeItem(
     const backup::Path &dir,
     QTreeWidgetItem *parent)
@@ -246,7 +273,7 @@ QTreeWidgetItem *MainWindow::generateOneTreeItem(
         static_cast<int>(BackupEnum::SIZE), FormatFileSize(meta.size));
     item->setText(
         static_cast<int>(BackupEnum::PERMISSION),
-        FormatPermission(meta.permissions, filetype));
+        ::FormatPermission(meta.permissions, filetype));
     item->setText(
         static_cast<int>(BackupEnum::MOD_TIME), FormatTime(meta.mod_time));
     item->setText(
@@ -352,7 +379,7 @@ void MainWindow::on_browseLocalFile_clicked()
             filename.c_str(),
             FormatFileSize(meta.size),
             static_cast<backup::FileType>(meta.type),
-            FormatPermission(
+            ::FormatPermission(
                 meta.permissions, static_cast<backup::FileType>(meta.type)),
             FormatTime(meta.mod_time),
             backup::UidToString(meta.uid).c_str());
@@ -407,7 +434,7 @@ void MainWindow::onItemDoubleClicked(QTreeWidgetItem *item, int column)
             filename.c_str(),
             FormatFileSize(meta.size),
             static_cast<backup::FileType>(meta.type),
-            FormatPermission(
+            ::FormatPermission(
                 meta.permissions, static_cast<backup::FileType>(meta.type)),
             FormatTime(meta.mod_time),
             backup::UidToString(meta.uid).c_str());
@@ -426,7 +453,7 @@ void MainWindow::generateRecoverTreeItem(
             filename.c_str(),
             FormatFileSize(meta.size),
             static_cast<backup::FileType>(meta.type),
-            FormatPermission(
+            ::FormatPermission(
                 meta.permissions, static_cast<backup::FileType>(meta.type)),
             FormatTime(meta.mod_time),
             backup::UidToString(meta.uid).c_str());
@@ -508,19 +535,23 @@ void MainWindow::on_startRestoreButton_clicked()
 void MainWindow::on_checkStateChange(QTreeWidgetItem *item, int column)
 {
     if (column != 0) return;
+
     disconnect(
         ui->backupFileList,
         &QTreeWidget::itemChanged,
         this,
         &MainWindow::on_checkStateChange);
+
     if (item->text(static_cast<int>(BackupEnum::FILE_TYPE)) ==
         GetTypeTag(backup::FileType::DIR)) {
         Qt::CheckState state = item->checkState(column);
         // 设置子项
         TreeItemSetCheckState(item, state);
     }
+
     // 更新父项的状态
     TreeUpdateParentCheckState(item);
+
     connect(
         ui->backupFileList,
         &QTreeWidget::itemChanged,
@@ -559,4 +590,73 @@ void MainWindow::TreeUpdateParentCheckState(QTreeWidgetItem *childItem)
 
     // 递归更新父项的父项
     TreeUpdateParentCheckState(parentItem);
+}
+
+void MainWindow::on_browseCheckFile_clicked()
+{
+    QString filePath = QFileDialog::getOpenFileName(
+        this, "选择备份文件", "", "备份文件 (*.bak);;所有文件 (*)");
+    if (filePath.isEmpty()) return;
+    // mima
+    ui->restoreFileCheckLineEdit->setText(filePath);
+    backup::BackupCheck check;
+    auto [s, result] =
+        check.CheckBackupFile(filePath.toStdString(), password.toStdString());
+    if (s.code != backup::OK) {
+        Message::warning(this, s.msg.c_str());
+        return;
+    }
+    if (result.empty()) {
+        Message::info(this, "备份验证成功，数据完整无误");
+        ui->resultLabel->setText("备份验证成功，数据完整无误");
+        return;
+    }
+    auto treewidget = ui->checkResultList;
+    for (size_t i = 0; i < result.size(); i++) {
+        auto &rt = result[i];
+        QTreeWidgetItem *item = new QTreeWidgetItem();
+        item->setText(
+            static_cast<int>(CheckEnum::DIFF_TYPE),
+            QString::number(i) + ' ' + GetCheckTypeTag(rt.type));
+        item->setText(
+            static_cast<int>(CheckEnum::ORIGIN_PATH), rt.origin_path.c_str());
+        item->setText(
+            static_cast<int>(CheckEnum::BACKUP_PATH), rt.backup_path.c_str());
+        item->setText(static_cast<int>(CheckEnum::DETAILS), rt.detail.c_str());
+        treewidget->addTopLevelItem(item);
+    }
+    ui->resultLabel->setText("备份验证失败，请检查差异项");
+    Message::warning(this, "备份验证失败，请检查差异项");
+}
+
+void MainWindow::on_checkResultList_itemClicked(
+    QTreeWidgetItem *item,
+    int column)
+{
+    // 获取项的文本（假设这些是路径信息）
+    QString text = item->text(column);
+
+    // 假设这些是文件路径，如果路径过长则显示完整路径
+    if (text.length() > 10) {                     // 判断路径是否过长
+        QToolTip::showText(QCursor::pos(), text); // 在鼠标位置显示路径
+    }
+}
+
+void MainWindow::on_checkResultList_customContextMenuRequested(
+    const QPoint &pos)
+{
+    QTreeWidgetItem *item = ui->checkResultList->itemAt(pos);
+    if (item) {
+        // 创建右键菜单
+        QMenu contextMenu(this);
+        QAction *openAction = contextMenu.addAction("复制路径");
+        // 连接动作点击事件
+        connect(openAction, &QAction::triggered, this, [this, item]() {
+            QString filePath = item->text(static_cast<int>(
+                CheckEnum::ORIGIN_PATH)); // 获取第二列（文件路径）
+            QClipboard *clipboard = QApplication::clipboard(); // 获取剪贴板
+            clipboard->setText(filePath); // 将字符串复制到剪贴板
+        });
+        contextMenu.exec(QCursor::pos()); // 显示右键菜单
+    }
 }

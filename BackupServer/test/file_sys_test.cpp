@@ -72,6 +72,7 @@ TEST(PathTest, ParentPath)
 
 TEST(PathTest, GetFilesFromDir)
 {
+    EXPECT_EQ(::system("rm -rf dir"), 0);
     EXPECT_EQ(::system("mkdir dir && touch dir/f1 dir/f2 dir/f3"), 0);
     std::unordered_set<std::string> st;
     st.insert("f1");
