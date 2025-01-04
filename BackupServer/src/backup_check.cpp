@@ -45,7 +45,7 @@ void BackupCheck::CheckBackupFile(
                 result.emplace_back(MakeResult(
                     CheckType::ADD,
                     path.GetFileType(),
-                    path.ToString(),
+                    (Path(meta.origin_path) / path).ToString(),
                     meta.pack_path));
             }
         }

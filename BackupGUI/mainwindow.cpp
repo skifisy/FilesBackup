@@ -282,9 +282,9 @@ QTreeWidgetItem *MainWindow::generateOneTreeItem(
     item->setText(static_cast<int>(BackupEnum::FULL_PATH), fullpath);
     backup::FileMetadata meta;
     meta.SetFromPath(fullpath.toStdString());
-
-    item->setText(
-        static_cast<int>(BackupEnum::SIZE), FormatFileSize(meta.size));
+    if (filetype == backup::FileType::REG)
+        item->setText(
+            static_cast<int>(BackupEnum::SIZE), FormatFileSize(meta.size));
     item->setText(
         static_cast<int>(BackupEnum::PERMISSION),
         ::FormatPermission(meta.permissions, filetype));
@@ -340,7 +340,8 @@ QTreeWidgetItem *MainWindow::generateOneRecoverItem(
 {
     QTreeWidgetItem *item = new QTreeWidgetItem();
     item->setText(static_cast<int>(RecoverEnum::FILE_NAME), filename);
-    item->setText(static_cast<int>(RecoverEnum::SIZE), size);
+    if (filetype == backup::FileType::REG)
+        item->setText(static_cast<int>(RecoverEnum::SIZE), size);
     item->setText(
         static_cast<int>(RecoverEnum::FILE_TYPE), GetTypeTag(filetype));
     item->setText(static_cast<int>(RecoverEnum::PERMISSION), permission);
