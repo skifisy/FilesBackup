@@ -50,10 +50,23 @@ class BackUpImpl : public BackUp
         const std::string &target_dir,
         const std::string &password = "");
 
+    /**
+     * @brief 重新备份文件（定时备份）
+     */
+    Status ReBackupFile(
+        const std::string &backup_path,
+        bool isEncrypt,
+        const std::string &password);
+
     BackUpImpl();
     ~BackUpImpl() = default;
 
   private:
+    void BackupTreeDetail(
+        const std::string &target_path,
+        backup::FileTree &filetree,
+        bool is_encrypt,
+        const std::string &password);
     // 备份文件->解密->解压缩
     /**
      * @return 解密&解压后的文件路径
@@ -61,9 +74,13 @@ class BackUpImpl : public BackUp
     std::string RecoverToPackFile(
         const std::string &backup_path,
         const std::string &password = "");
-    
-    void CheckFilePermission(const std::string& path, int permissions);
-    
+
+    void CheckFilePermission(const std::string &path, int permissions);
+
+    void ReBackupFile(
+        std::shared_ptr<FileNode> node,
+        FileTree &tree,
+        std::string pack_dir);
     std::string temp_path;
 };
 } // namespace backup

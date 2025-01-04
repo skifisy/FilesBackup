@@ -45,7 +45,7 @@ class FileTree
      * @brief 在文件树上添加文件，将磁盘路径为src的文件，打包到
      * 相对路径dest上
      * @param src 磁盘路径（文件/文件夹）（相对/绝对路径，内部会处理)
-     * @param dest 打包路径（不含开始/，结尾不含/）
+     * @param dest 打包路径（不含开始/，结尾可含/）
      * @param recursively 对于文件夹是否要递归处理
      * @param is_partly 文件夹是否部分选中
      */

@@ -29,7 +29,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <property name="iconSize">
        <size>
@@ -485,10 +485,24 @@
              </item>
              <item>
               <widget class="QLabel" name="resultLabel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string/>
                </property>
               </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_2" native="true"/>
              </item>
             </layout>
            </item>
@@ -496,6 +510,11 @@
             <widget class="QTreeWidget" name="checkResultList">
              <property name="enabled">
               <bool>true</bool>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+              </font>
              </property>
              <property name="focusPolicy">
               <enum>Qt::StrongFocus</enum>
@@ -571,6 +590,11 @@
           <column>
            <property name="text">
             <string>是否加密</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>任务状态</string>
            </property>
           </column>
           <column>

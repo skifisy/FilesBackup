@@ -136,4 +136,5 @@ enum Permission
  */
 ErrorCode Access(const std::string &path, int permission);
 
+bool RenameFile(const std::string & s1, const std::string& s2);
 } // namespace backup

@@ -362,6 +362,11 @@ ErrorCode Access(const std::string &path, int permission)
     }
 }
 
+bool RenameFile(const std::string &s1, const std::string &s2)
+{
+    return rename(s1.c_str(), s2.c_str()) == 0;
+}
+
 std::string GetFileTypeTag(FileType type)
 {
     switch (type) {

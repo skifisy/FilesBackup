@@ -139,6 +139,7 @@ size_t DumpArray(const unsigned char *arr, int size, std::ofstream &ofs);
 template <typename T>
 size_t LoadVar(T &t, std::ifstream &ifs)
 {
+    if (ifs.eof()) throw Status{EEOF, "file eof"};
     ifs.read(reinterpret_cast<char *>(&t), sizeof(t));
     return sizeof(t);
 }

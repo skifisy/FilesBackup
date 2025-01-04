@@ -4,22 +4,14 @@
 #include <QButtonGroup>
 #include <QDialog>
 #include "file_meta.h"
-
-enum RegularTimeType
-{
-    SECOND,
-    MINUTE,
-    HOUR,
-    DAY,
-    WEEK,
-    MONTH,
-    YEAR
-};
+#include "schedule_task.h"
 struct BackupConfig
 {
     QString filename;
     QString backPath;
-    RegularTimeType timetype;
+    // RegularTimeType timetype;
+    int interval;
+    backup::TimeUnit unit;
     bool isEncrypt;
     QString password;
 };
@@ -48,7 +40,7 @@ class BackupConfigDialog : public QDialog
 
     void on_startButton_clicked();
 
-    void on_comboBox_currentIndexChanged(int index);
+    void on_timeSelection_currentIndexChanged(int index);
 
 private:
     Ui::BackupConfigDialog *ui;

@@ -1,9 +1,9 @@
 #include "backup_impl.h"
-#include "file_tree.h"
 #include "compress.h"
-#include "encrypt.h"
-#include "cstring"
 #include "config.h"
+#include "cstring"
+#include "encrypt.h"
+#include "file_tree.h"
 namespace backup {
 class FilesCleaner
 {
@@ -119,54 +119,66 @@ Status BackUpImpl::BackupBatch(
     }
     std::string target_path =
         (Path(config.target_dir) / Path(config.backup_name)).ToString();
-    FilesCleaner cleaner;
     try {
         // 1. 打包文件
         FileTree filetree;
         for (const auto &[src, dest, is_partly] : src_path) {
+            CheckFilePermission(src, READ);
             filetree.PackFileAdd(src, dest, false, is_partly);
         }
-        std::string pack_path = target_path + "_pack_temp";
-        std::ofstream packfile_ofs(pack_path, std::ios::binary);
-        if (!packfile_ofs.is_open()) {
-            throw Status{NO_PERMISSION, "无法写入文件" + pack_path};
-        }
-        filetree.FullDump(packfile_ofs);
-        packfile_ofs.close();
-        cleaner.AddFile(pack_path);
-
-        // 往backup file写入header信息
-        std::ofstream target_file_ofs(target_path, std::ios::binary);
-        BackupHeader header;
-        header.is_encrypt = config.is_encrypt;
-        header.Dump(target_file_ofs);
-
-        // 2. 压缩文件
-        std::ifstream packfile_ifs(pack_path, std::ios::binary);
-        if (!packfile_ifs.is_open()) {
-            throw Status{NOT_EXIST, "文件" + pack_path + "不存在"};
-        }
-        std::string compress_path(target_path + "_compress_temp");
-        std::ofstream compress_file_ofs;
-        if (config.is_encrypt) {
-            compress_file_ofs.open(compress_path, std::ios::binary);
-            cleaner.AddFile(compress_path);
-        } else {
-            compress_file_ofs = std::move(target_file_ofs);
-        }
-        Compress compress(packfile_ifs, compress_file_ofs);
-        compress.CompressFile();
-        compress_file_ofs.close();
-        // 3. 加密文件
-        if (config.is_encrypt) {
-            std::ifstream compress_file_ifs(compress_path, std::ios::binary);
-            Encrypt enc(compress_file_ifs, target_file_ofs);
-            enc.AES_encrypt_file(config.password);
-        }
+        BackupTreeDetail(
+            target_path, filetree, config.is_encrypt, config.password);
     } catch (const Status &s) {
         return s;
     }
     return {OK, ""};
+}
+
+void BackUpImpl::BackupTreeDetail(
+    const std::string &target_path,
+    backup::FileTree &filetree,
+    bool is_encrypt,
+    const std::string &password)
+{
+    FilesCleaner cleaner;
+
+    std::string pack_path = target_path + "_pack_temp";
+    std::ofstream packfile_ofs(pack_path, std::ios::binary);
+    if (!packfile_ofs.is_open()) {
+        throw Status{NO_PERMISSION, "无法写入文件" + pack_path};
+    }
+    filetree.FullDump(packfile_ofs);
+    packfile_ofs.close();
+    cleaner.AddFile(pack_path);
+
+    // 往backup file写入header信息
+    std::ofstream target_file_ofs(target_path, std::ios::binary);
+    BackupHeader header;
+    header.is_encrypt = is_encrypt;
+    header.Dump(target_file_ofs);
+
+    // 2. 压缩文件
+    std::ifstream packfile_ifs(pack_path, std::ios::binary);
+    if (!packfile_ifs.is_open()) {
+        throw Status{NOT_EXIST, "文件" + pack_path + "不存在"};
+    }
+    std::string compress_path(target_path + "_compress_temp");
+    std::ofstream compress_file_ofs;
+    if (is_encrypt) {
+        compress_file_ofs.open(compress_path, std::ios::binary);
+        cleaner.AddFile(compress_path);
+    } else {
+        compress_file_ofs = std::move(target_file_ofs);
+    }
+    Compress compress(packfile_ifs, compress_file_ofs);
+    compress.CompressFile();
+    compress_file_ofs.close();
+    // 3. 加密文件
+    if (is_encrypt) {
+        std::ifstream compress_file_ifs(compress_path, std::ios::binary);
+        Encrypt enc(compress_file_ifs, target_file_ofs);
+        enc.AES_encrypt_file(password);
+    }
 }
 
 std::tuple<Status, std::shared_ptr<FileNode>> BackUpImpl::GetFileList(
@@ -231,6 +243,40 @@ Status BackUpImpl::RestoreBatch(
     return Status{OK, ""};
 }
 
+Status BackUpImpl::ReBackupFile(
+    const std::string &backup_path,
+    bool isEncrypt,
+    const std::string &password)
+{
+    FilesCleaner cleaner;
+    try {
+        std::string uncompress_path = RecoverToPackFile(backup_path, password);
+        cleaner.AddFile(uncompress_path);
+        std::ifstream ifs(uncompress_path, std::ios::binary);
+        if (!ifs.is_open()) {
+            throw Status{NOT_EXIST, "无法恢复解压/解密备份文件"};
+        }
+        FileTree recover_tree;
+        recover_tree.Load(ifs);
+        // 根据文件树，找到源路径，全部重新备份一遍
+        FileTree backup_tree;
+        ReBackupFile(recover_tree.GetRootNode(), backup_tree, "");
+        std::string backup_new;
+        for (int i = 0; i < INT_MAX; i++) {
+            backup_new = backup_path + '_' + std::to_string(i);
+            if (Access(backup_new, EXIST) == OK) continue;
+            if (RenameFile(backup_path, backup_new))
+                break;
+            else
+                throw Status{errno, backup_make_error_code(errno).message()};
+        }
+        BackupTreeDetail(backup_path, backup_tree, isEncrypt, password);
+    } catch (const Status &s) {
+        return s;
+    }
+    return Status(OK, "");
+}
+
 BackUpImpl::BackUpImpl()
 {
     Config *config = Config::getInstance();
@@ -245,6 +291,9 @@ std::string BackUpImpl::RecoverToPackFile(
     const std::string &password)
 {
     CheckFilePermission(backup_path, READ);
+    if (Path(backup_path).GetFileType() != FileType::REG) {
+        throw Status{ERROR, backup_path + "不是备份文件！"};
+    }
     std::ifstream ifs(backup_path, std::ios::binary);
     BackupHeader header;
     header.Load(ifs);
@@ -258,7 +307,10 @@ std::string BackUpImpl::RecoverToPackFile(
     }
     FilesCleaner cleaner;
     std::string temp_prefix = temp_path + '/' + Path(backup_path).FileName();
-    if (password.empty()) {
+    auto [st, is_enc] = isEncrypted(backup_path);
+    if (st.code != OK) throw st;
+
+    if (!is_enc) {
         std::string uncompress_path = temp_prefix + "_uncompress_temp";
         std::ofstream ofs(uncompress_path, std::ios::binary);
         if (!ofs.is_open()) {
@@ -300,6 +352,41 @@ void BackUpImpl::CheckFilePermission(const std::string &path, int permissions)
         } else if (ret == NO_PERMISSION) {
             throw Status{
                 NO_PERMISSION, "没有对文件/文件夹" + path + "的访问权限"};
+        }
+    }
+}
+void BackUpImpl::ReBackupFile(
+    std::shared_ptr<FileNode> root,
+    FileTree &tree,
+    std::string pack_dir)
+{
+    if (!root->meta_.name.empty()) {
+        pack_dir = pack_dir + root->meta_.name + "/";
+    }
+    for (auto &[filename, node] : root->children_) {
+        auto &meta = node->meta_;
+        try {
+            CheckFilePermission(meta.origin_path, READ);
+        } catch (const Status &s) {
+            if (s.code != OK) { continue; }
+        }
+        tree.PackFileAdd(
+            meta.origin_path, pack_dir, false, meta.is_partly_check);
+
+        if (meta.is_directory && !meta.is_partly_check) {
+            // 添加新增的文件
+            auto list = GetFilesFromDir(meta.origin_path);
+            std::string cur_pack_dir = pack_dir + meta.name + "/";
+            for (auto &filename : list) {
+                // 可以直接递归添加文件
+                tree.PackFileAdd(
+                    (Path(meta.origin_path) / filename).ToString(),
+                    cur_pack_dir,
+                    true,
+                    false);
+            }
+        } else if (!node->children_.empty()) {
+            ReBackupFile(node, tree, pack_dir);
         }
     }
 }

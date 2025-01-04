@@ -24,6 +24,7 @@ class BackupTestFixture : public ::testing::Test
 // 使用测试夹具
 TEST_F(BackupTestFixture, BackupBatch)
 {
+    EXPECT_EQ(::system("rm -rf dir"), 0);
     EXPECT_EQ(::system("mkdir dir && touch dir/f1 dir/f2"), 0);
     std::vector<std::string> filelist;
     filelist.emplace_back("dir");
@@ -114,4 +115,38 @@ TEST_F(BackupTestFixture, RestoreBach)
     compute_file_sha256(ifs2, hash2);
     EXPECT_EQ(::memcmp(hash1, hash2, SHA256_SIZE), 0);
     EXPECT_EQ(::system("rm -rf dir recover1 backup_test"), 0);
+}
+
+TEST(BackupImplTest, ReBackupTest)
+{
+    EXPECT_EQ(::system("rm -rf re1 re2 dir backup*"), 0);
+    BackUpImpl back;
+    EXPECT_EQ(::system("mkdir dir"), 0);
+    EXPECT_EQ(
+        ::system("echo \"hello1\" > dir/f1 && echo \"hello2\" > dir/f2 && "
+                 "mkfifo dir/fo"),
+        0);
+    std::vector<BackupData> filelist;
+    filelist.emplace_back("dir", "");
+    filelist.emplace_back("dir/f1", "dir");
+    filelist.emplace_back("dir/f2", "dir");
+    filelist.emplace_back("dir/fo", "dir");
+    BackupConfig config{"backup_test", ".", false, ""};
+    back.BackupBatch(config, filelist);
+    EXPECT_EQ(::system("echo \"hello3\" > dir/f3 && rm -f dir/f2"), 0);
+    back.ReBackupFile("backup_test", false, "");
+    Status s = back.RestoreBatch("backup_test", {"dir"}, "./re1");
+    EXPECT_EQ(s.code, OK);
+    s = back.RestoreBatch("backup_test_0", {"dir"}, "./re2");
+    EXPECT_EQ(s.code, OK);
+
+    EXPECT_EQ(Access("re1/dir/f2", READ), NOT_EXIST);
+    EXPECT_EQ(Access("re1/dir/f3", READ), OK);
+    EXPECT_EQ(Access("re1/dir/fo", READ), OK);
+    EXPECT_EQ(Access("re2/dir/f1", READ), OK);
+    EXPECT_EQ(Access("re2/dir/f3", READ), NOT_EXIST);
+    EXPECT_EQ(Access("re2/dir/fo", READ), OK);
+    back.ReBackupFile("backup_test", false, "");
+    EXPECT_EQ(Access("backup_test_1", EXIST), OK);
+    EXPECT_EQ(::system("rm -rf re1 re2 dir backup*"), 0);
 }

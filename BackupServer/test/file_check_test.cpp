@@ -32,4 +32,5 @@ TEST(BackupCheck, CheckBackupFile)
     //     std::cout << GetCheckTypeTag(r.type) << "; " << r.origin_path << "; "
     //               << r.backup_path << "; " << r.detail << std::endl;
     // }
+    EXPECT_EQ(::system("rm -rf dd pack"), 0);
 }

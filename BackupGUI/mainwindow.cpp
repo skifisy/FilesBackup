@@ -51,6 +51,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->packPathLineEdit->addAction(
         icon, QLineEdit::LeadingPosition); // 在左侧添加图标
     ui->checkResultList->setIndentation(0);
+    scheduler.StartThread();
+    RenderTaskList();
+    ui->taskList->setColumnWidth(0, 150);
+    ui->taskList->setColumnWidth(1, 150);
     connect(
         backupDialog,
         &BackupConfigDialog::backupFile,
@@ -166,6 +170,16 @@ void MainWindow::on_backupFiles(QSharedPointer<BackupConfig> config)
     backup::Status s = back->BackupBatch(backupConfig, list);
     if (s.code == backup::OK) {
         Message::info(this, "文件备份成功！");
+        // 定时任务
+        if (config->unit != backup::TimeUnit::NONE) {
+            backup::BackupTask *task = new backup::BackupTask(
+                (config->backPath + "/" + config->filename).toStdString(),
+                config->interval,
+                config->unit,
+                config->isEncrypt,
+                config->password.toStdString());
+            scheduler.AddTask(task);
+        }
     } else {
         Message::warning(this, s.msg.c_str());
     }
@@ -485,6 +499,35 @@ void MainWindow::TreeItemSetCheckState(
     }
 }
 
+void MainWindow::RenderTaskList()
+{
+    QTreeWidget *treewidget = ui->taskList;
+    treewidget->clear();
+    auto list = scheduler.GetTaskList();
+    for (auto &task : list) {
+        QTreeWidgetItem *item = new QTreeWidgetItem(treewidget);
+        item->setText(
+            static_cast<int>(SchedulerEnum::FILENAME),
+            QFileInfo(task.backup_path.c_str()).fileName());
+        item->setText(
+            static_cast<int>(SchedulerEnum::NEXTTIME),
+            FormatTime(
+                std::chrono::system_clock::to_time_t(task.next_backup_time)));
+        item->setText(
+            static_cast<int>(SchedulerEnum::FREQUENT),
+            QString::number(task.interval) +
+                backup::GetTimeUnitTag(task.unit).c_str());
+        item->setText(
+            static_cast<int>(SchedulerEnum::ENCRYPT),
+            task.isEncrypted ? "是" : "否");
+        item->setText(
+            static_cast<int>(SchedulerEnum::TASK_STATUS), task.status.c_str());
+        item->setText(
+            static_cast<int>(SchedulerEnum::LOCAL_PATH),
+            task.backup_path.c_str());
+    }
+}
+
 void MainWindow::on_startRestoreButton_clicked()
 {
     QList<QTreeWidgetItem *> checked_items =
@@ -597,8 +640,26 @@ void MainWindow::on_browseCheckFile_clicked()
     QString filePath = QFileDialog::getOpenFileName(
         this, "选择备份文件", "", "备份文件 (*.bak);;所有文件 (*)");
     if (filePath.isEmpty()) return;
-    // mima
+    ui->checkResultList->clear();
+    ui->resultLabel->setText("");
+    // 检查文件密码
     ui->restoreFileCheckLineEdit->setText(filePath);
+    backup::BackUp *backup = new backup::BackUpImpl();
+    auto [st, is_encrypt] = backup->isEncrypted(filePath.toStdString());
+    if (st.code != backup::OK) {
+        Message::warning(this, st.msg.c_str());
+        return;
+    }
+    if (is_encrypt) {
+        auto [checked, pass] = InputDialog::getText(this, "请输入密码：");
+        if (!checked) {
+            ui->restoreFileCheckLineEdit->clear();
+            return;
+        }
+        password = std::move(pass);
+    } else
+        password = "";
+
     backup::BackupCheck check;
     auto [s, result] =
         check.CheckBackupFile(filePath.toStdString(), password.toStdString());
@@ -609,6 +670,8 @@ void MainWindow::on_browseCheckFile_clicked()
     if (result.empty()) {
         Message::info(this, "备份验证成功，数据完整无误");
         ui->resultLabel->setText("备份验证成功，数据完整无误");
+        // 设置文本颜色为蓝色
+        ui->resultLabel->setStyleSheet("color: blue; font-size: 14px;");
         return;
     }
     auto treewidget = ui->checkResultList;
@@ -627,6 +690,7 @@ void MainWindow::on_browseCheckFile_clicked()
     }
     ui->resultLabel->setText("备份验证失败，请检查差异项");
     Message::warning(this, "备份验证失败，请检查差异项");
+    ui->resultLabel->setStyleSheet("color: red; font-size: 14px;");
 }
 
 void MainWindow::on_checkResultList_itemClicked(
@@ -659,4 +723,28 @@ void MainWindow::on_checkResultList_customContextMenuRequested(
         });
         contextMenu.exec(QCursor::pos()); // 显示右键菜单
     }
+}
+
+void MainWindow::on_tabWidget_currentChanged(int index)
+{
+    if (index == 3) { RenderTaskList(); }
+}
+
+// delete one
+void MainWindow::on_deleteTaskButton_clicked()
+{
+    auto task_list = ui->taskList->selectedItems();
+    for (auto &task_item : task_list) {
+        QString backupPath =
+            task_item->text(static_cast<int>(SchedulerEnum::LOCAL_PATH));
+        scheduler.DeleteTask(backupPath.toStdString());
+    }
+    RenderTaskList();
+}
+
+// delete all
+void MainWindow::on_clearTaskButton_clicked()
+{
+    scheduler.DeleteAll();
+    RenderTaskList();
 }

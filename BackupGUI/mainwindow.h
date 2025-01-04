@@ -9,6 +9,7 @@
 #include <QTreeWidgetItem>
 #include "file_tree.h"
 #include "backup_check.h"
+#include "schedule_task.h"
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -47,6 +48,17 @@ enum class CheckEnum
     DETAILS,     // 详情
 };
 
+// 定时备份
+enum class SchedulerEnum
+{
+    FILENAME,    // 文件名
+    NEXTTIME,    // 下次备份时间
+    FREQUENT,    // 备份频率
+    ENCRYPT,     // 是否加密
+    TASK_STATUS, // 任务状态
+    LOCAL_PATH,  // 本地路径
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -81,7 +93,13 @@ class MainWindow : public QMainWindow
 
     void on_checkResultList_customContextMenuRequested(const QPoint &pos);
 
-  private:
+    void on_tabWidget_currentChanged(int index);
+
+    void on_deleteTaskButton_clicked();
+
+    void on_clearTaskButton_clicked();
+
+private:
     /// 获取文件类型
     QString GetTypeTag(backup::FileType type);
     /// 获取文件图标
@@ -119,6 +137,8 @@ class MainWindow : public QMainWindow
 
     void TreeItemSetCheckState(QTreeWidgetItem *item, Qt::CheckState state);
 
+    void RenderTaskList();
+
     QString CurPathToString();
     Ui::MainWindow *ui;
     // QString: 文件的绝对路径
@@ -130,5 +150,6 @@ class MainWindow : public QMainWindow
     bool is_encrypted;
     QList<QString> cur_path;
     std::shared_ptr<backup::FileNode> recover_tree;
+    backup::TaskScheduler scheduler;
 };
 #endif // MAINWINDOW_H

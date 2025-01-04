@@ -15,6 +15,7 @@ BackupConfigDialog::BackupConfigDialog(QWidget *parent)
     // buttonGroup->addButton(ui->everydayRadioButton,
     // RegularTimeType::every_day); buttonGroup->addButton(
     //     ui->everyweekRadioButton, RegularTimeType::every_week);
+    ui->descripText->setVisible(false);
 }
 
 BackupConfigDialog::~BackupConfigDialog() { delete ui; }
@@ -54,6 +55,11 @@ void BackupConfigDialog::on_startButton_clicked()
     config->backPath = ui->backupFileDirectoryLineEdit->text();
     config->filename = ui->backupFilenameLineEdit->text() + ".bak";
     config->isEncrypt = ui->passwordCheckBox->isChecked();
+    bool ok = true;
+    config->unit =
+        static_cast<backup::TimeUnit>(ui->timeSelection->currentIndex());
+    if (config->unit != backup::TimeUnit::NONE)
+        config->interval = ui->timeInterval->text().toInt(&ok);
     if (config->isEncrypt) { config->password = ui->passwordLineEdit->text(); }
 
     // validate
@@ -69,14 +75,19 @@ void BackupConfigDialog::on_startButton_clicked()
         Message::warning(this, "文件密码不能为空!");
         return;
     }
+
+    if (!ok) { Message::warning(this, "请输入正确的间隔时长"); }
     // 获取选中的time check按钮
     // QAbstractButton *selectedButton = buttonGroup->checkedButton();
     // config->timetype =
     //     static_cast<RegularTimeType>(buttonGroup->id(selectedButton));
-    ui->timeInterval->text();
-    ui->timeSelection;
     emit backupFile(config);
     this->hide();
 }
 
-void BackupConfigDialog::on_comboBox_currentIndexChanged(int index) {}
+void BackupConfigDialog::on_timeSelection_currentIndexChanged(int index)
+{
+    ui->timeInterval->setDisabled(index == 0);
+    ui->descripText->setVisible(index != 0);
+    if (index == 0) { ui->timeInterval->clear(); }
+}

@@ -45,6 +45,7 @@ size_t LoadVar(bool &t, std::ifstream &ifs)
 
 size_t LoadArray(unsigned char *arr, int size, std::ifstream &ifs)
 {
+    if (ifs.eof()) throw Status{EEOF, "file eof"};
     ifs.read(reinterpret_cast<char *>(arr), size);
     return size;
 }
