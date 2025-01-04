@@ -232,7 +232,7 @@ size_t BackupTask::Load(std::ifstream &ifs)
     ret += LoadString(password, ifs);
     ret += LoadVar(run, ifs);
     ret += LoadString(status, ifs);
-    return ret; 
+    return ret;
 }
 std::chrono::system_clock::time_point
 UserTimeToTimepoint(int interval, TimeUnit unit)
@@ -264,6 +264,7 @@ UserTimeToTimepoint(int interval, TimeUnit unit)
         dur = years(interval);
         break;
     default:
+        dur = milliseconds(0);
         break;
     }
     return system_clock::now() + dur;
