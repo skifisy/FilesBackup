@@ -38,13 +38,6 @@
 namespace backup {
 #define BACK_MAGIC "BKP"
 
-enum RegularTimeType
-{
-    none = 0,
-    every_day = 1,
-    every_week = 2
-};
-
 struct BackupFileHeader
 {
     char magic[4];    // 标识符，表示文件类型 "BKU"

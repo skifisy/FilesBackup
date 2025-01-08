@@ -93,6 +93,12 @@ class Haffman
     // 递归删除结点
     void deleteNode(Node *node);
     void createHaffmanCodeSub(Node *root, int len, std::bitset<256> code);
+    
+    // len为实际的bitset长度
+    // @return 返回dump下来的字节数
+    size_t DumpBitSet(std::bitset<256> set, int len, std::ofstream &ofs);
+    size_t LoadBitSet(std::bitset<256> &set, int len, std::ifstream &ifs);
+    
     // 统计频次信息
     std::unordered_map<char, uint64_t> charFreq;
     // 用于生成哈夫曼树的优先队列
@@ -109,10 +115,7 @@ class Haffman
     size_t file_len = 0;             // 编码后的bit数
     std::streampos file_len_pos = 0; // file_len在文件流的位置
 
-    // len为实际的bitset长度
-    // @return 返回dump下来的字节数
-    size_t DumpBitSet(std::bitset<256> set, int len, std::ofstream &ofs);
-    size_t LoadBitSet(std::bitset<256> &set, int len, std::ifstream &ifs);
+    
 };
 
 } // namespace backup

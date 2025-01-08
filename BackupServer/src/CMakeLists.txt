@@ -10,5 +10,5 @@ add_library(backuplib ${SRC_FILES})
 target_link_libraries(backuplib ${CRYPTO_LIBRARY})
 
 # 生成可执行文件
-add_executable(backup ${PROJECT_SOURCE_DIR}/src/main.cpp)
-target_link_libraries(backup backuplib)
+# add_executable(backup ${PROJECT_SOURCE_DIR}/src/main.cpp)
+# target_link_libraries(backup backuplib)

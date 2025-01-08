@@ -14,6 +14,6 @@ RUN cd FilesBackup && mkdir thirdparty && cd thirdparty \
 
 RUN cd FilesBackup && mkdir build && cd build \
     && cmake -DCMAKE_BUILD_TYPE=Release .. \
-    && make -j && ctest
+    && make -j && ctest && make install
 
 WORKDIR /root/FilesBackup

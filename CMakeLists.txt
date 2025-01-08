@@ -10,9 +10,10 @@ file(COPY ${CMAKE_SOURCE_DIR}/BackupServer/test.jpg DESTINATION ${CMAKE_BINARY_D
 # 将 config.json 从源目录复制到构建目录
 file(COPY ${CMAKE_SOURCE_DIR}/config.json DESTINATION ${CMAKE_BINARY_DIR}/BackupGUI)
 file(COPY ${CMAKE_SOURCE_DIR}/config.json DESTINATION ${CMAKE_BINARY_DIR}/BackupServer)
+file(COPY ${CMAKE_SOURCE_DIR}/config.json DESTINATION ${CMAKE_SOURCE_DIR}/build)
 include_directories(${PROJECT_SOURCE_DIR}/thirdparty/json/include)
 add_subdirectory(BackupServer)
 add_subdirectory(BackupGUI)
-
+install(TARGETS backup DESTINATION ${CMAKE_SOURCE_DIR}/build)
 # 启用测试
 enable_testing()
