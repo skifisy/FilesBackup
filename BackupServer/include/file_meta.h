@@ -75,8 +75,6 @@ struct BackupFileHeader
 
 struct FileMetadata
 {
-    // path格式：不含开始的/，结尾不含/
-    // 相对路径，相对于打包文件
     std::string pack_path; // 文件或文件夹的打包路径（含文件名）
     std::string name;      // 文件名
     std::string origin_path;      // 源路径（用于验证）
