@@ -368,7 +368,7 @@ void MainWindow::on_browseLocalFile_clicked()
     if (status.code == backup::OK && is_encryt) {
         this->is_encrypted = is_encrypted;
         while (true) {
-            auto [ok, pass] = InputDialog::getText(this, "请输入密码：");
+            auto [ok, pass] = InputDialog::getPassword(this, "请输入密码：");
             if (!ok) return;
             if (pass.isEmpty()) { Message::warning(this, "密码不能为空！"); }
             password = std::move(pass);
@@ -652,7 +652,7 @@ void MainWindow::on_browseCheckFile_clicked()
         return;
     }
     if (is_encrypt) {
-        auto [checked, pass] = InputDialog::getText(this, "请输入密码：");
+        auto [checked, pass] = InputDialog::getPassword(this, "请输入密码：");
         if (!checked) {
             ui->restoreFileCheckLineEdit->clear();
             return;

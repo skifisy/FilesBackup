@@ -76,7 +76,10 @@ void BackupConfigDialog::on_startButton_clicked()
         return;
     }
 
-    if (!ok) { Message::warning(this, "请输入正确的间隔时长"); }
+    if (!ok) {
+        Message::warning(this, "请输入正确的间隔时长");
+        return;
+    }
     // 获取选中的time check按钮
     // QAbstractButton *selectedButton = buttonGroup->checkedButton();
     // config->timetype =
