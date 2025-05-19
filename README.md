@@ -22,6 +22,24 @@ cmake .. && make -j && make install
 
 本项目在docker中指定了环境变量`DISPLAY=host.docker.internal:0`，所以可以在宿主机中运行Xming服务器，例如XLaunch，从而显示docker的图形界面
 
+例如可以按照如下方式配置图形界面：
+1. 在宿主机（windows）上安装[VcXsrv](https://vcxsrv.com/)
+2. 运行该软件
+  - 可以选择`multiple window`，这样打开一个图形界面，就有一个独立的小窗口
+  - 也可以试试其他展示方式
+
+![](images/VcXsrv1.png)
+
+3. 一直下一步，在图示步骤下填写参数`-ac`，禁用访问控制，允许来自任何主机的X连接
+
+![](images/VcXsrv2.png)
+
+4. 最后不断下一步，完成即可。
+
+## 功能展示
+
+参见PPT
+
 ## 项目扩展方向
 
 如果你想要以此项目为基础继续扩展，可以考虑以下方向：
